@@ -2,7 +2,7 @@
 import re
 
 
-def count_mat_detect(text: str, mat_dict_path: str = "app/data/mats.txt"):
+def count_mat_detect(text: str, mat_dict_path: str = "app/models/mats.txt"):
     """Модуль подсчёта матерных слов
 
     :param text: Текст который нужно проанализировать задаётся как str. Может быть любой длины
