@@ -1,6 +1,7 @@
 from fastapi.encoders import jsonable_encoder
 
 from fastapi import APIRouter
+from app.libs.emotion.emotion_detect import Emotion
 
 from app.libs.toxic.check_insult import BertPredict
 from app.libs.toxic.mat_filter import count_mat_detect
@@ -49,3 +50,10 @@ async def get_mat(text: str) -> tuple:
     return count_mat_detect(text)
 
 
+@emotion_router.get(
+    path='/get_emotion',
+    summary='Определение эмоций'
+)
+async def emotion(text: str):
+    emo = Emotion()
+    return emo.predict(text)
