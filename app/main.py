@@ -13,6 +13,8 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from uvicorn import run
 
 from app.routers.emotion import emotion_router
+from app.routers.dev_route import dev_router
+
 
 logger = getLogger(__name__)
 
@@ -50,7 +52,8 @@ def create_app() -> Union[FastAPI, SentryAsgiMiddleware]:
         KeycloakWrapper,
         RabbitMQWrapper,
     )
-    
+
     service.app.include_router(router=emotion_router, prefix='/emotion')
+    service.app.include_router(router=dev_router, prefix='/dev')
 
     return service.runnable  # type: ignore
