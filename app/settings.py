@@ -7,7 +7,8 @@ logger = getLogger("settings")
 
 
 class MongoCollectionsSubSettings(ServiceSettingsBase):
-    ...
+    users: str = "users"
+    message: str = "message"
 
 
 class RabbitMQEntitiesSubSettings(ServiceSettingsBase):
@@ -15,7 +16,9 @@ class RabbitMQEntitiesSubSettings(ServiceSettingsBase):
 
 
 class Settings(ServiceSettingsBase):
-    mongodb_database: str = "core-emotion"
+    users_mongodb_database: str = "user_api"
+    communication_system_mongodb_database: str = "communication_system"
+    # mongodb_database: str = "core-emotion"
     collections: MongoCollectionsSubSettings = MongoCollectionsSubSettings()
     rmq: RabbitMQEntitiesSubSettings = RabbitMQEntitiesSubSettings()
     ...
