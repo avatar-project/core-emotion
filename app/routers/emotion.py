@@ -1,12 +1,16 @@
+from cmath import e
 from fastapi.encoders import jsonable_encoder
 
 from fastapi import APIRouter
 from app.libs.emotion.emotion_detect import Emotion
+from app.libs.mongo.emotion_crud import psycho_text_analyze
 
 from app.libs.toxic.check_insult import BertPredict
 from app.libs.toxic.mat_filter import count_mat_detect
+from app.schemas.messages import MessageBase
 
 emotion_router = APIRouter()
+
 
 @emotion_router.get(
     path='/',
@@ -30,6 +34,7 @@ async def is_toxic(text: str):
     """
     toxic = BertPredict(model_path='app/models/rubert-toxic-detection')
     return toxic.predict(text)
+
 
 @emotion_router.get(
     path='/mat_detect',
@@ -57,3 +62,12 @@ async def get_mat(text: str) -> tuple:
 async def emotion(text: str):
     emo = Emotion()
     return emo.predict(text)
+
+
+@emotion_router.post(
+    path='/psycho_text_analyze',
+    summary='Психоэмоциональный анализ сообщения'
+)
+async def text_analyze(message: MessageBase):
+    print('hi')
+    await psycho_text_analyze(message)

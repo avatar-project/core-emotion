@@ -13,9 +13,17 @@ def mongodb_communicator_dabtabase() -> AsyncIOMotorDatabase:
     return mongodb_client().get_database(settings.communication_system_mongodb_database)
 
 
+def mongodb_emotion_dabtabase() -> AsyncIOMotorDatabase:
+    return mongodb_client().get_database(settings.emotion_mongodb_database)
+
+
 def messages_collection() -> AsyncIOMotorCollection:
     return mongodb_communicator_dabtabase()[settings.collections.message]
 
 
 def users_collection() -> AsyncIOMotorCollection:
     return mongodb_user_database()[settings.collections.users]
+
+
+def psycho_collection() -> AsyncIOMotorCollection:
+    return mongodb_emotion_dabtabase()[settings.collections.psycho]
