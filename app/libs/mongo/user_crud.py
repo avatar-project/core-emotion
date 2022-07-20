@@ -2,7 +2,7 @@
 
 from typing import List
 from app.libs.mongo.injectors import users_collection
-from app.schemas.users import UserGeneralSchema, UserTinySchema
+from app.schemas.users import UserTinySchema
 
 
 async def get_all_users() -> List[UserTinySchema]:
@@ -13,4 +13,3 @@ async def get_all_users() -> List[UserTinySchema]:
     users = [UserTinySchema(**user) async for user in users]
     print(len(users))
     return users
-
