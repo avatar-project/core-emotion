@@ -1,7 +1,8 @@
 from datetime import datetime
 from enum import Enum
 from typing import Optional
-from pydantic import UUID4, BaseModel
+from uuid import uuid4
+from pydantic import UUID4, BaseModel, Field
 
 
 class DestinationType(str, Enum):  # тип получателя
@@ -38,6 +39,7 @@ class MessageBase(BaseModel):
 
 
 class EmotionMessageBase(MessageBase):
+    id: UUID4 = Field(default_factory=uuid4)
     is_toxic: bool = False,
     have_filthy: bool = False,
     emotion: EmotionType = 0
