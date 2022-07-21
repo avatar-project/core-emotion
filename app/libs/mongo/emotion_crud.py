@@ -1,44 +1,12 @@
 
 
-from typing import List
 from pydantic import UUID4
-from app.libs.emotion.emotion_detect import Emotion
 from app.libs.mongo.injectors import psycho_collection
-from app.schemas.messages import EmotionMessageBase, MessageBase
-from nltk.tokenize import sent_tokenize
-
-
-async def psycho_text_analyze(message: MessageBase):
-    """_summary_
-
-    Args:
-        message (MessageBase): _description_
-    """
-    print('hi')
-    sents = await get_text_sents(message.text)
-    emotion = Emotion()
-    emotion_list = []
-    for sent in sents:
-        emo = emotion.predict(sent)
-        emotion_list.append(emo)
-    print(sents)
-    print(emotion_list)
-
-
-async def get_text_sents(text: str) -> List[str]:
-    """Get all sentence from text message
-
-    Args:
-        text (str): message text
-
-    Returns:
-        List[str]: list og sentence
-    """
-    return sent_tokenize(text)
+from app.schemas.messages import EmotionMessageBase
 
 
 async def save_emotion_massage(emotion_message: EmotionMessageBase):
-    """save message with emotion predict in the database
+    """Save message with emotion predict in the database
 
     Args:
         emotion_message (EmotionMessageBase): message

@@ -3,9 +3,9 @@ from fastapi.encoders import jsonable_encoder
 
 from fastapi import APIRouter
 from app.libs.emotion.emotion_detect import Emotion
-from app.libs.mongo.emotion_crud import psycho_text_analyze
+from app.libs.psycho_analyze.analyze import psycho_text_analyze
 
-from app.libs.toxic.check_insult import BertPredict
+from app.libs.toxic.bert_predict import BertPredict
 from app.libs.toxic.mat_filter import count_mat_detect
 from app.schemas.messages import MessageBase
 
@@ -32,7 +32,7 @@ async def is_toxic(text: str):
         <br />
         <b>return:</b> - bool, True if text is toxic or False
     """
-    toxic = BertPredict(model_path='app/models/rubert-toxic-detection')
+    toxic = BertPredict()
     return toxic.predict(text)
 
 
@@ -69,5 +69,4 @@ async def emotion(text: str):
     summary='Психоэмоциональный анализ сообщения'
 )
 async def text_analyze(message: MessageBase):
-    print('hi')
     await psycho_text_analyze(message)
