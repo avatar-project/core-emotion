@@ -69,4 +69,4 @@ async def emotion(text: str):
     summary='Психоэмоциональный анализ сообщения'
 )
 async def text_analyze(message: MessageBase):
-    await psycho_text_analyze(message)
+    return await psycho_text_analyze(message)

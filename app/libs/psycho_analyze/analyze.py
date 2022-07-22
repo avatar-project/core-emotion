@@ -19,9 +19,12 @@ async def psycho_text_analyze(message: MessageBase):
     # Сохраняем каждое анализируемое предложение
     await save_all_sents(message, sents, emotion_list, toxic_list, mat_list)
 
+    return 'ok'
+
 
 async def save_all_sents(message, sents, emotion_list, toxic_list, mat_list):
     """Save all sents of the message"""
+    print('save')
     for i, sent in enumerate(sents):
         await save_emotion_massage(
             EmotionSentBase(

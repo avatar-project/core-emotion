@@ -20,7 +20,7 @@ class SenderType(str, Enum):  # Тип отправителя
     AVATAR = 'avatar'
 
 
-class EmotionType(str, Enum):
+class EmotionType(int, Enum):
     NEUTRAL = 0,
     JOY = 1,
     SADNESS = 2,
