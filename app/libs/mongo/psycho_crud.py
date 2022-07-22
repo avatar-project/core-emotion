@@ -2,10 +2,10 @@
 
 from pydantic import UUID4
 from app.libs.mongo.injectors import psycho_collection
-from app.schemas.messages import EmotionMessageBase
+from app.schemas.messages import EmotionSentBase
 
 
-async def save_emotion_massage(emotion_message: EmotionMessageBase):
+async def save_emotion_massage(emotion_message: EmotionSentBase):
     """Save message with emotion predict in the database
 
     Args:
@@ -16,7 +16,7 @@ async def save_emotion_massage(emotion_message: EmotionMessageBase):
     await psycho_col.insert_one(emotion_message.dict())
 
 
-async def get_message_info(message_id: UUID4) -> EmotionMessageBase:
+async def get_message_info(message_id: UUID4) -> EmotionSentBase:
     """Get information about message with emotion predict
 
     Args:
@@ -30,4 +30,4 @@ async def get_message_info(message_id: UUID4) -> EmotionMessageBase:
     message = await psycho_col.find_one({"message_id": message_id})
 
     if message:
-        return EmotionMessageBase(**message)
+        return EmotionSentBase(**message)

@@ -3,8 +3,8 @@ from datetime import datetime, date
 from typing import List
 from pydantic import UUID4
 
-from app.libs.mongo.injectors import messages_collection
-from app.schemas.messages import MessageBase
+from app.libs.mongo.injectors import messages_collection, psycho_collection
+from app.schemas.messages import EmotionSentBase, MessageBase
 
 
 async def get_user_day_messages(user_id: UUID4) -> List[MessageBase]:

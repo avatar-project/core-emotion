@@ -11,5 +11,5 @@ async def get_all_users() -> List[UserTinySchema]:
 
     users = users_col.find({})
     users = [UserTinySchema(**user) async for user in users]
-    print(len(users))
+
     return users

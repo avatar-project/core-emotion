@@ -38,8 +38,8 @@ class MessageBase(BaseModel):
     timestamp: datetime
 
 
-class EmotionMessageBase(MessageBase):
+class EmotionSentBase(MessageBase):
     id: UUID4 = Field(default_factory=uuid4)
     is_toxic: bool = False,
     have_filthy: bool = False,
-    emotion: EmotionType = 0
+    emotion: EmotionType = EmotionType.NEUTRAL
