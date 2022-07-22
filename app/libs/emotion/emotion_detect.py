@@ -29,5 +29,5 @@ class Emotion:
             logits = EmotionModels.model(**inputs).logits
 
         predicted_class_id = logits.argmax().item()
-
-        return (predicted_class_id, EmotionModels.model.config.id2label[predicted_class_id])
+        print(torch.softmax(logits, -1).cpu().numpy()[0][predicted_class_id])
+        return (predicted_class_id, torch.softmax(logits, -1).cpu().numpy()[0][predicted_class_id])

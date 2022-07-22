@@ -4,7 +4,7 @@ from app.libs.emotion.emotion_detect import Emotion
 from app.libs.mongo.psycho_crud import save_emotion_massage
 from app.libs.toxic.bert_predict import BertPredict
 from app.libs.toxic.mat_filter import count_mat_detect
-from app.schemas.messages import EmotionSentBase, MessageBase
+from app.schemas.messages import EmotionSentBase, EmotionType, MessageBase, MessageWithEmotions
 from nltk.tokenize import sent_tokenize
 
 
@@ -15,30 +15,39 @@ async def psycho_text_analyze(message: MessageBase):
         message (MessageBase): _description_
     """
     sents = await get_text_sents(message.text)  # Разбиваем сообщение на предложения
-    emotion_list, toxic_list, mat_list = await sents_get_psycho_metrics(sents)  # Анализируем каждое предложение
+    # Анализируем каждое предложение
+    emotion_list = await sents_get_psycho_metrics(sents)
     # Сохраняем каждое анализируемое предложение
-    await save_all_sents(message, sents, emotion_list, toxic_list, mat_list)
+    message_with_emotions = await message_get_psycho_metrics(message, emotion_list)
+    await save_all_sents(message_with_emotions)
 
-    return 'ok'
+    return message_with_emotions
+
+# async def get_advice():
 
 
-async def save_all_sents(message, sents, emotion_list, toxic_list, mat_list):
+async def save_all_sents(message_with_emotions):
     """Save all sents of the message"""
-    print('save')
-    for i, sent in enumerate(sents):
-        await save_emotion_massage(
-            EmotionSentBase(
-                message_id=message.message_id,
-                sender_id=message.sender_id,
-                sender_type=message.sender_type,
-                destination=message.destination,
-                timestamp=message.timestamp,
-                text=sent,
-                is_toxic=toxic_list[i],
-                emotion=emotion_list[i],
-                have_filthy=mat_list[i]
-            )
-        )
+    await save_emotion_massage(message_with_emotions)
+
+
+async def message_get_psycho_metrics(message: MessageBase, emotion_list: EmotionSentBase):
+    psycho_message = await get_psycho_metrics(message.text)
+    # m_emotion = {
+    #     'm_is_toxic': False,
+    #     'm_emotion': EmotionType.NEUTRAL,
+    #     'm_emotion_proba': 1.0,
+    #     'm_have_filthy': False
+    # }
+    message_with_emotions = MessageWithEmotions(
+        **message.dict(),
+        m_is_toxic=psycho_message['tox'],
+        m_emotion=psycho_message['emo'],
+        m_emotion_proba=psycho_message['emo_proba'],
+        m_have_filthy=psycho_message['mat'],
+        emotions=emotion_list
+    )
+    return message_with_emotions
 
 
 async def sents_get_psycho_metrics(sents: List[str]) -> tuple:
@@ -48,43 +57,48 @@ async def sents_get_psycho_metrics(sents: List[str]) -> tuple:
         sents (List[str]): список предложений
 
     Returns:
-        tuple (List[int], List[bool], List[bool]): кортеж со списками для каждого предложения, эмоция, токсичность и мат
+        (List[EmotionSentBase]): список предложений с психоэмоциональными характеристиками
     """
     emotion_list = []
-    toxic_list = []
-    mat_list = []
+
     for sent in sents:
-        emo, tox, mat = await get_psycho_metrics(sent)
-        emotion_list.append(emo)
-        toxic_list.append(tox)
-        mat_list.append(mat)
+        psycho = await get_psycho_metrics(sent)
+        emotion_list.append(EmotionSentBase(
+            text=sent,
+            is_toxic=psycho['tox'],
+            have_filthy=psycho['mat'],
+            emotion=psycho['emo'],
+            emotion_proba=psycho['emo_proba']
+        ))
 
-    return emotion_list, toxic_list, mat_list
+    return emotion_list
 
 
-async def get_psycho_metrics(sent: str) -> tuple:
+async def get_psycho_metrics(sent: str) -> dict:
     """Вычисляем психоэмоциональные метрики предложения 
 
     Args:
         sent (str): предложение
 
     Returns:
-        tuple(int, bool, bool): (номер эмоции, токсичность, нецензурная лексика)
+        dict: (emo: номер эмоции, emo_proba: вероятность эмоции, tox: токсичность, mat: нецензурная лексика)
     """
     emotion = Emotion()
     toxic = BertPredict()
+    psycho = {}
 
-    if len(sent.split()) < 2:
-        emo = 0
-        tox = False
+    if len(sent.split()) < 3:
+        psycho['emo'] = 0
+        psycho['emo_proba'] = 1.0
+        psycho['tox'] = False
     else:
-        emo = emotion.predict(sent)[0]
-        tox = toxic.predict(sent)
+        psycho['emo'], psycho['emo_proba'] = emotion.predict(sent)
+        psycho['tox'] = toxic.predict(sent)
 
-    mat = count_mat_detect(sent)[0]
-    mat = True if mat else False
+    psycho['mat'] = count_mat_detect(sent)[0]
+    psycho['mat'] = True if psycho['mat'] else False
 
-    return emo, tox, mat
+    return psycho
 
 
 async def get_text_sents(text: str) -> List[str]:
