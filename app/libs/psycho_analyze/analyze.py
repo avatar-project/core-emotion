@@ -4,15 +4,15 @@ from app.libs.emotion.emotion_detect import Emotion
 from app.libs.mongo.psycho_crud import save_emotion_massage
 from app.libs.toxic.bert_predict import BertPredict
 from app.libs.toxic.mat_filter import count_mat_detect
-from app.schemas.messages import EmotionSentBase, EmotionType, MessageBase, MessageWithEmotions
+from app.schemas.messages import EmotionSentBase, MessageBase, MessageWithEmotions
 from nltk.tokenize import sent_tokenize
 
 
 async def psycho_text_analyze(message: MessageBase):
-    """_summary_
+    """Основная функция, в которой сообщения проходит весь пайплайн от предобработки и вычесления метрик до записи в базу и отправки пользователю
 
     Args:
-        message (MessageBase): _description_
+        message (MessageBase): сообщение 
     """
     sents = await get_text_sents(message.text)  # Разбиваем сообщение на предложения
     # Анализируем каждое предложение
@@ -23,22 +23,24 @@ async def psycho_text_analyze(message: MessageBase):
 
     return message_with_emotions
 
-# async def get_advice():
-
 
 async def save_all_sents(message_with_emotions):
     """Save all sents of the message"""
     await save_emotion_massage(message_with_emotions)
 
 
-async def message_get_psycho_metrics(message: MessageBase, emotion_list: EmotionSentBase):
+async def message_get_psycho_metrics(message: MessageBase, emotion_list: EmotionSentBase) -> MessageWithEmotions:
+    """Получаем психоэмоциональные метрики для полного текста сообщения, а также оборачиваем в схему все
+
+    Args:
+        message (MessageBase): сообщение    
+        emotion_list (EmotionSentBase): список предложений с метриками
+
+    Returns:
+        MessageWithEmotions: сообщение с метриками и списком предложений с метриками
+    """
     psycho_message = await get_psycho_metrics(message.text)
-    # m_emotion = {
-    #     'm_is_toxic': False,
-    #     'm_emotion': EmotionType.NEUTRAL,
-    #     'm_emotion_proba': 1.0,
-    #     'm_have_filthy': False
-    # }
+
     message_with_emotions = MessageWithEmotions(
         **message.dict(),
         m_is_toxic=psycho_message['tox'],
@@ -48,6 +50,16 @@ async def message_get_psycho_metrics(message: MessageBase, emotion_list: Emotion
         emotions=emotion_list
     )
     return message_with_emotions
+
+
+async def calculate_coef(message_with_emotions: MessageWithEmotions):
+    # TODO пересчет выбора эмоций и токсичности, с учетом эмоций по предложениям
+    pass
+
+
+async def get_advice():
+    # TODO получить совет по коммуникации
+    pass
 
 
 async def sents_get_psycho_metrics(sents: List[str]) -> tuple:
