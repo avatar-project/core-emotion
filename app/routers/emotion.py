@@ -1,11 +1,8 @@
-from cmath import e
-from fastapi.encoders import jsonable_encoder
-
 from fastapi import APIRouter
 from app.libs.emotion.emotion_detect import Emotion
 from app.libs.psycho_analyze.analyze import psycho_text_analyze
 
-from app.libs.toxic.bert_predict import BertPredict
+from app.libs.toxic.bert_predict import text2toxicity
 from app.libs.toxic.mat_filter import count_mat_detect
 from app.schemas.messages import MessageBase
 
@@ -23,7 +20,7 @@ async def index():
 @emotion_router.get(
     path='/is_toxic',
     summary='Is toxic text or not?',
-    response_model=bool
+    response_model=tuple
 )
 async def is_toxic(text: str):
     """
@@ -32,8 +29,11 @@ async def is_toxic(text: str):
         <br />
         <b>return:</b> - bool, True if text is toxic or False
     """
-    toxic = BertPredict()
-    return toxic.predict(text)
+    toxic_proba = text2toxicity(text)
+    if toxic_proba > 0.5:
+        return (toxic_proba, True)
+    else:
+        return (toxic_proba, False)
 
 
 @emotion_router.get(

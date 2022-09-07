@@ -30,4 +30,4 @@ class Emotion:
 
         predicted_class_id = logits.argmax().item()
         print(torch.softmax(logits, -1).cpu().numpy()[0][predicted_class_id])
-        return (predicted_class_id, torch.softmax(logits, -1).cpu().numpy()[0][predicted_class_id])
+        return (predicted_class_id, float(torch.softmax(logits, -1).cpu().numpy()[0][predicted_class_id]))

@@ -2,7 +2,6 @@ from typing import List
 
 from app.libs.emotion.emotion_detect import Emotion
 from app.libs.mongo.psycho_crud import save_emotion_massage
-from app.libs.toxic.bert_predict import BertPredict
 from app.libs.toxic.mat_filter import count_mat_detect
 from app.schemas.messages import EmotionSentBase, MessageBase, MessageWithEmotions
 from nltk.tokenize import sent_tokenize
@@ -96,7 +95,7 @@ async def get_psycho_metrics(sent: str) -> dict:
         dict: (emo: номер эмоции, emo_proba: вероятность эмоции, tox: токсичность, mat: нецензурная лексика)
     """
     emotion = Emotion()
-    toxic = BertPredict()
+    # toxic = BertPredict()
     psycho = {}
 
     if len(sent.split()) < 3:
@@ -105,7 +104,7 @@ async def get_psycho_metrics(sent: str) -> dict:
         psycho['tox'] = False
     else:
         psycho['emo'], psycho['emo_proba'] = emotion.predict(sent)
-        psycho['tox'] = toxic.predict(sent)
+        # psycho['tox'] = toxic.predict(sent)
 
     psycho['mat'] = count_mat_detect(sent)[0]
     psycho['mat'] = True if psycho['mat'] else False
