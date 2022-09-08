@@ -5,6 +5,8 @@
 
 # Веса модели эмоций
 app/models/emotion-detection
+# Веса модели токсичности
+app/models/toxic-detection
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
