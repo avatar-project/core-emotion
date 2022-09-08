@@ -1,39 +1,48 @@
-# core-emotion
+# Руководство по установке 
 
-Generated from cookiecutter template
----
+Клонировать репозиторий 
 
-## Development
+    git@github.com:TimurSamigulin/core-emotion.git
 
-### Install dependencies
 
-```
-pip install -r requirements-dev.txt -U
-```
+Скачать модель для детекции эмоций по [ссылке](https://drive.google.com/drive/folders/11DcQ9zA4S78VkNVfnheHlF4_6i8iJ0Nd?usp=sharing) и добавить в папку app/models/emotion-detection
 
-### Install git hooks
+# Руководство по использованию
 
-```
-pre-commit install --install-hooks
-```
+Для запуска этих сервисов необходимо:
 
-## Run service
+установить в систему иметь Docker и утилиту Docker-Compose.
 
-```
-mv .env.example .env
-python -m app
-```
+выполнить в терминале команду
 
-## Run pre-commit hooks
+    docker-compose up -d
 
-### Run whole hooks config
+В случае возникновения неполадок с Docker-Compose, установленной через пакетный менеджер системы, можно установить docker-compose в виртуальное окружение Python:
 
-```
-pre-commit run --all-files
-```
+    pip install docker-compose
 
-### Run single hook
+Для того, чтобы запустить модуль локально, необходимо:
 
-```
-pre-commit run flake8 --all-files
-```
+Если модуль был склонирован из репозитория - необходимо создать виртуальное окружение
+
+    python3.9 -m venv .venv
+
+и установить зависимости (команда для установки будет добавлена позже)
+
+Активировать виртуальное окружение Python
+
+    source .venv/bin/activate
+
+Запустить модуль
+
+    python -m app
+
+Если будут ошибки с запуском Redis, mongodb и т.д., нужно проверить наличие .env файла и при его отсутствии выполнить
+
+    sudo cp .env.example .env
+
+Если нужно установить зависимости для существующего модуля (микросервиса), то нужно воспользоваться командой
+
+    pip install -r requirements.txt --extra-index-url http://pypi:zURsnxpa7uge5w4F@5.53.125.17:8080 --trusted-host 5.53.125.17
+
+Это вызвано тем, что некоторые определенные версии библиотек лежат на локальных серверах ИТМО
