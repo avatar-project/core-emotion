@@ -11,10 +11,8 @@ from platform_services.sentry import SentryWrapper
 from platform_services.service import PlatformService, get_general_settings
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from uvicorn import run
-from app.dev_fill_db import fill_database
 
 from app.routers.emotion import emotion_router
-from app.routers.dev_route import dev_router
 
 
 logger = getLogger(__name__)
@@ -55,7 +53,6 @@ def create_app() -> Union[FastAPI, SentryAsgiMiddleware]:
     )
 
     service.app.include_router(router=emotion_router, prefix='/emotion')
-    service.app.include_router(router=dev_router, prefix='/dev')
 
     # TODO delete after dev
     # service.app.add_event_handler("startup", fill_database)

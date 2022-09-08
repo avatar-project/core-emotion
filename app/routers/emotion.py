@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from app.libs.emotion.emotion_detect import Emotion
-from app.libs.psycho_analyze.analyze import psycho_text_analyze
+from app.libs.main import psycho_text_analyze
 
-from app.libs.toxic.bert_predict import text2toxicity
+from app.libs.toxic.toxic_detect import text2toxicity
 from app.libs.toxic.mat_filter import count_mat_detect
 from app.schemas.messages import MessageBase
 
@@ -64,9 +64,17 @@ async def emotion(text: str):
     return emo.predict(text)
 
 
+# @emotion_router.post(
+#     path='/psycho_text_analyze',
+#     summary='Психоэмоциональный анализ сообщения'
+# )
+# async def text_analyze(message: MessageBase):
+#     return await psycho_text_analyze(message)
+
+
 @emotion_router.post(
-    path='/psycho_text_analyze',
+    path='/text',
     summary='Психоэмоциональный анализ сообщения'
 )
-async def text_analyze(message: MessageBase):
+async def test(message: MessageBase):
     return await psycho_text_analyze(message)
