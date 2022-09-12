@@ -1,48 +1,26 @@
-# Руководство по установке 
+# Руководство по установке
 
-Клонировать репозиторий 
+Клонировать репозиторий
 
-    git@github.com:TimurSamigulin/core-emotion.git
+    https://gitlab.actcognitive.org/avatar/core-emotion.git
 
+Скачать модель для детекции эмоций и токсичности по [ссылке](https://drive.google.com/drive/folders/1jGZDYIR1e6bvxtltvpQoQw67hcjuWUxX?usp=sharing) и добавить в папку app/models
 
-Скачать модель для детекции эмоций по [ссылке](https://drive.google.com/drive/folders/11DcQ9zA4S78VkNVfnheHlF4_6i8iJ0Nd?usp=sharing) и добавить в папку app/models/emotion-detection
+В файле app/libs/main.py находятся функции для получения эмоций и советов для сообщений
 
-# Руководство по использованию
+<b>Функция /psycho_text_analyze</b>
 
-Для запуска этих сервисов необходимо:
+Получает на вход сообщение по схеме MessageBase:
 
-установить в систему иметь Docker и утилиту Docker-Compose.
+    class MessageBase(BaseModel):
+        chat_id: UUID4
+        message_id: UUID4
+        created_at: datetime
+        content: str = ''
 
-выполнить в терминале команду
+А на выход MessageWithEmotions:
 
-    docker-compose up -d
-
-В случае возникновения неполадок с Docker-Compose, установленной через пакетный менеджер системы, можно установить docker-compose в виртуальное окружение Python:
-
-    pip install docker-compose
-
-Для того, чтобы запустить модуль локально, необходимо:
-
-Если модуль был склонирован из репозитория - необходимо создать виртуальное окружение
-
-    python3.9 -m venv .venv
-
-и установить зависимости (команда для установки будет добавлена позже)
-
-Активировать виртуальное окружение Python
-
-    source .venv/bin/activate
-
-Запустить модуль
-
-    python -m app
-
-Если будут ошибки с запуском Redis, mongodb и т.д., нужно проверить наличие .env файла и при его отсутствии выполнить
-
-    sudo cp .env.example .env
-
-Если нужно установить зависимости для существующего модуля (микросервиса), то нужно воспользоваться командой
-
-    pip install -r requirements.txt --extra-index-url http://pypi:zURsnxpa7uge5w4F@5.53.125.17:8080 --trusted-host 5.53.125.17
-
-Это вызвано тем, что некоторые определенные версии библиотек лежат на локальных серверах ИТМО
+    class MessageWithEmotions(BaseModel):
+        message_id: UUID4
+        emotion: EmotionType
+        advice: Advice
