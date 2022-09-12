@@ -54,7 +54,4 @@ def create_app() -> Union[FastAPI, SentryAsgiMiddleware]:
 
     service.app.include_router(router=emotion_router, prefix='/emotion')
 
-    # TODO delete after dev
-    # service.app.add_event_handler("startup", fill_database)
-
     return service.runnable  # type: ignore
