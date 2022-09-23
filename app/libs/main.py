@@ -17,11 +17,22 @@ async def psycho_text_analyze(message: MessageBase):
     message_emotion = await calculate_coef(message_with_emotion, sents_emotion_list)
     # Получаем совет
     advices = await get_advice(message, message_emotion)
+    # готовим данные к возврату
+    message_with_emotion = []
 
-    message_with_emotion = MessageWithEmotions(
-        message_id=message.message_id,
-        emotion=message_emotion,
-        advice=advices
-    )
+    for advice in advices:
+        message_with_emotion.append(
+            MessageWithEmotions(
+                chat_id=message.chat_id,
+                user_id=advice.user_id,
+                message_id=message.message_id,
+                emotion=message_emotion.name.lower(),
+                advice_id=advice.advice_id
+            )
+        )
 
     return message_with_emotion
+
+
+async def daily_recommendation(user_id):
+    ...

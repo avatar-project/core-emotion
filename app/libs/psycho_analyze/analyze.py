@@ -1,11 +1,14 @@
+import random
+
 from typing import List
+from datetime import datetime, timedelta
 
 from app.libs.emotion.emotion_detect import Emotion
 from app.libs.toxic.mat_filter import count_mat_detect
 from app.libs.toxic.toxic_detect import text2toxicity
 from app.schemas.messages import Advice, EmotionType, MessageBase
+from app.libs.postres_crud.queries import get_all_advices, get_user_emotion_a_message, get_last_user_advice_with_emotion, get_chat_users
 from nltk.tokenize import sent_tokenize
-
 
 
 async def message_get_psycho_metrics(message: MessageBase) -> dict:
@@ -24,6 +27,16 @@ async def message_get_psycho_metrics(message: MessageBase) -> dict:
 
 
 async def calculate_coef(message_with_emotion: dict, sents_emotion_list: List[dict]) -> EmotionType:
+    """Расчитываем итоговую эмоцию, к эмоция по предложениям, добавляем эмоцию по всему сообщению. Затем находим наиболее часто встречаемую эмоцию,
+    при равенстве эмоций, возвращаем эмоции по приоритету, грусть - радость - страх. При наличии токсичных сообщений, всегда решаем, что это злость.
+
+    Args:
+        message_with_emotion (dict): _description_
+        sents_emotion_list (List[dict]): _description_
+
+    Returns:
+        EmotionType: _description_
+    """
     sents_emotion_list.append(message_with_emotion)
 
     coef = {
@@ -68,10 +81,102 @@ async def calculate_coef(message_with_emotion: dict, sents_emotion_list: List[di
     return EmotionType.NEUTRAL
 
 
-async def get_advice(message: MessageBase, message_emotion: EmotionType):
-    # TODO получить совет по коммуникации
-    return Advice(advice_sender='В твоих сообщениях я увидел много раздражения. Может быть, стоит успокоиться и вернуться к переписке позже?',
-            advice_recipient='Я определил, что Name нервничает. Попробуй уточнить причины его состояния.')
+async def get_advice(message: MessageBase, message_emotion: EmotionType) -> List[Advice]:
+    users = await get_chat_users(message.message_id)  # Все пользователи которые относятся к этому сообщению
+
+    # Заполняем советы дефолтными None, если совета не будет
+    advices_to_user = []
+    for user in users:
+        advices_to_user.append(
+            Advice(
+                user_id=user['user_id'],
+                advice_id=None
+            )
+        )
+    if message_emotion == EmotionType.NEUTRAL:
+        return advices_to_user
+
+    # Для отправителя получаем его сообщения в чате за последний час
+    user_messages = await get_user_emotion_a_message(chat_id=message.chat_id,
+                                                     user_id=message.user_id,
+                                                     from_at=datetime.now() - timedelta(hours=1),
+                                                     to_at=datetime.now())
+
+    user_emotions = {}
+    last_advice_message = None
+
+    # Смотрим, был ли совет за последний час, если по такой же эмоции был, то возвращаем дефолт
+    for user_message in user_messages:
+        if user_message['advice_id']:
+            last_advice_message = user_message
+            if user_message['emotion'].lower() == message_emotion.name.lower():
+                return advices_to_user
+
+        if user_emotions.get(user_message['emotion'].lower(), None):
+            user_emotions[user_message['emotion'].lower()] += 1
+        else:
+            user_emotions[user_message['emotion'].lower()] = 1
+
+    # Далее даем совет если текущая эмоция трижды встречалась за последний час или текущая эмоция встречалась больше раз, чем та, для которой дали уже совет
+    current_emotion_count = user_emotions.get(message_emotion.name.lower(), 0)
+
+    if last_advice_message:
+        last_advice_emotion_count = user_emotions.get(last_advice_message['emotion'].lower(), 0)
+        if current_emotion_count > 3 and current_emotion_count >= last_advice_emotion_count:
+            return await get_current_advice(message, message_emotion, users)
+        else:
+            return advices_to_user
+    else:
+        if current_emotion_count > 3:
+            return await get_current_advice(message, message_emotion, users)
+        else:
+            return advices_to_user
+
+    return advices_to_user
+
+
+async def get_current_advice(message: MessageBase, message_emotion: EmotionType, users: List[dict]) -> List[Advice]:
+    """
+        Получаем текст совета для каждого пользователя
+    """
+    advicec = await get_all_advices()  # Получаем все советы
+
+    users_advices = []
+
+    # Пробегаем по юзерам и назначем каждому совет
+    for i, user in enumerate(users):
+        if user['user_id'] == message.user_id:
+            # last_user_emotion_advice сюда записываем последний совет пользователю, чтобы не повторяться советами
+            last_user_emotion_advice = await get_last_user_advice_with_emotion(
+                user['user_id'], message_emotion.name.lower(), is_sender=True)
+
+            # Ниже в suitable_advice фильтруем только подходящие советы для юзера
+            if last_user_emotion_advice:
+                suitable_advice = [x for x in advicec if x['emotion']
+                                   == message_emotion.name.lower() and x['is_sender'] and x['advice_id'] != last_user_emotion_advice['advice_id']]
+            else:
+                suitable_advice = [x for x in advicec if x['emotion']
+                                   == message_emotion.name.lower() and x['is_sender']]
+        else:
+            last_user_emotion_advice = await get_last_user_advice_with_emotion(
+                user['user_id'], message_emotion.name.lower(), is_sender=False)
+
+            if last_user_emotion_advice:
+                suitable_advice = [x for x in advicec if x['emotion']
+                                   == message_emotion.name.lower() and not x['is_sender'] and x['advice_id'] != last_user_emotion_advice['advice_id']]
+            else:
+                suitable_advice = [x for x in advicec if x['emotion']
+                                   == message_emotion.name.lower() and not x['is_sender']]
+
+        # и итоговый совет рандомом из подходящих
+        random_index = random.randint(0, len(suitable_advice) - 1)
+
+        users_advices.append(Advice(
+            user_id=user['user_id'],
+            advice_id=suitable_advice[random_index]['advice_id']
+        ))
+
+    return users_advices
 
 
 async def sents_get_psycho_metrics(sents: List[str]) -> List[dict]:
