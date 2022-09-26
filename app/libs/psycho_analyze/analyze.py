@@ -9,6 +9,8 @@ from app.libs.toxic.toxic_detect import text2toxicity
 from app.schemas.messages import Advice, EmotionType, MessageBase
 from app.libs.postres_crud.queries import get_all_advices, get_user_emotion_a_message, get_last_user_advice_with_emotion, get_chat_users
 from nltk.tokenize import sent_tokenize
+import nltk
+nltk.download('punkt')
 
 
 async def message_get_psycho_metrics(message: MessageBase) -> dict:

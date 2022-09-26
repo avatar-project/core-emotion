@@ -22,7 +22,7 @@ async def psycho_text_analyze(message: MessageBase):
     advices = await get_advice(message, message_emotion)
     # готовим данные к возврату
     message_with_emotion = []
-
+    # print(advices)
     for advice in advices:
         message_with_emotion.append(
             MessageWithEmotions(
@@ -33,7 +33,7 @@ async def psycho_text_analyze(message: MessageBase):
                 advice_id=advice.advice_id
             )
         )
-
+    print(message_with_emotion)
     return message_with_emotion
 
 

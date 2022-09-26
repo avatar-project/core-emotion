@@ -6,18 +6,18 @@ from pydantic import UUID4, BaseModel, Field
 from datetime import datetime
 
 
-class EmotionType(int, Enum):
-    NEUTRAL = 0,
-    JOY = 1,
-    SADNESS = 2,
-    SURPRISE = 3,
-    FEAR = 4,
-    ANGER = 5
+class EmotionType(Enum):
+  NEUTRAL='neutral'
+  JOY='joy'
+  SADNESS='sadness'
+  SURPRISE='surprise'
+  FEAR='fear'
+  ANGER='anger'
 
 
 class MessageBase(BaseModel):
     chat_id: UUID4
-    message_id: UUID4
+    message_id: int
     user_id: UUID4
     created_at: datetime
     content: str = ''
@@ -31,11 +31,12 @@ class Advice(BaseModel):
 class MessageWithEmotions(BaseModel):
     chat_id: UUID4
     user_id: UUID4
-    message_id: UUID4
+    message_id: int
     emotion: EmotionType
-    advice: Advice
+    advice_id: Optional[UUID4]
 
 
 class MessageListener(BaseModel):
     message_id: int
     chat_id: UUID4
+
