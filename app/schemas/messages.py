@@ -31,3 +31,8 @@ class MessageWithEmotions(BaseModel):
     message_id: UUID4
     emotion: EmotionType
     advice: Advice
+
+
+class MessageListener(BaseModel):
+    message_id: int
+    chat_id: UUID4

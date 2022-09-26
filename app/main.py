@@ -3,13 +3,11 @@ from logging import DEBUG, INFO, WARNING, basicConfig, getLogger
 from typing import Union
 
 from fastapi import FastAPI
-from platform_services.keycloak import KeycloakWrapper
-from platform_services.mongodb import MongoDBWrapper
 from platform_services.rabbitmq import RabbitMQWrapper
-from platform_services.redis import RedisWrapper
-from platform_services.sentry import SentryWrapper
+from platform_services.postgresql import PostgreSQLWrapper
 from platform_services.service import PlatformService, get_general_settings
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from app.libs.listener import pl
 from uvicorn import run
 
 from app.routers.emotion import emotion_router
@@ -45,12 +43,11 @@ def create_app() -> Union[FastAPI, SentryAsgiMiddleware]:
     setup_logging()
 
     service = PlatformService(
-        SentryWrapper,
-        RedisWrapper,
-        MongoDBWrapper,
-        KeycloakWrapper,
+        PostgreSQLWrapper,
         RabbitMQWrapper,
     )
+    pw = PostgreSQLWrapper()
+    pw.notify_manager.include_listener(pl)
 
     service.app.include_router(router=emotion_router, prefix='/emotion')
 
