@@ -1,5 +1,8 @@
+from pydantic import UUID4
+
 from app.libs.psycho_analyze.analyze import calculate_coef, get_advice, get_text_sents, message_get_psycho_metrics, sents_get_psycho_metrics
 from app.schemas.messages import MessageBase, MessageWithEmotions
+from app.libs.psycho_analyze.daily_analyze import get_recommendation, get_text_recomandation
 
 
 async def psycho_text_analyze(message: MessageBase):
@@ -34,5 +37,10 @@ async def psycho_text_analyze(message: MessageBase):
     return message_with_emotion
 
 
-async def daily_recommendation(user_id):
-    ...
+async def daily_recommendation(user_id: UUID4):
+    daily_emotion = await get_recommendation(user_id)
+
+    if not daily_emotion:
+        return None
+
+    await get_text_recomandation(daily_emotion)

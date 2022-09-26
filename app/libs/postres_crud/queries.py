@@ -122,3 +122,52 @@ async def get_chat_users(message_id):
             lastname='Леонов'
         )
     ]
+
+
+async def get_user_all_emotion_messages(user_id, from_at, to_at) -> List[dict]:
+    """
+        TODO: Все сообщения пользователя за промежуток времени от from_at до to_ad с эмоциями из всех чатов.
+
+        select ma.user_id, ms.chat_id, ms.created_at, ma.emotion, ma.advice_id  from message_advice ma
+        where ma.user_id = '7374700d-494d-480f-b99b-9ed76be14322'
+        and ms.created_at between '2022-09-19 18:20:46.596121' and '2022-09-19 18:21:45.789603'
+    """
+    # Возврат тут примерный, сам запрос будет возвращать больше
+    return [
+        dict(
+            emotion='joy',
+            advice_id="6938d943-68d2-437d-92ef-2475cab01f11",
+        ),
+        dict(
+            emotion='fear',
+            advice_id=None,
+        ),
+        dict(
+            emotion='anger',
+            advice_id=None,
+        ),
+        dict(
+            emotion='anger',
+            advice_id=None,
+        ),
+        dict(
+            emotion='anger',
+            advice_id=None,
+        ),
+        dict(
+            emotion='neutral',
+            advice_id=None,
+        ),
+        dict(
+            emotion='neutral',
+            advice_id=None,
+        ),
+        dict(
+            emotion='neutral',
+            advice_id=None,
+        ),
+        dict(
+            emotion='neutral',
+            advice_id=None,
+        )
+    ]
