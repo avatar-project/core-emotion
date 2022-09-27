@@ -3,7 +3,8 @@ from logging import DEBUG, INFO, WARNING, basicConfig, getLogger
 from typing import Union
 
 from fastapi import FastAPI
-from platform_services.rabbitmq import RabbitMQWrapper
+
+# from platform_services.rabbitmq import RabbitMQWrapper
 from platform_services.postgresql import PostgreSQLWrapper
 from platform_services.service import PlatformService, get_general_settings
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
@@ -44,11 +45,11 @@ def create_app() -> Union[FastAPI, SentryAsgiMiddleware]:
 
     service = PlatformService(
         PostgreSQLWrapper,
-        RabbitMQWrapper,
+        # RabbitMQWrapper,
     )
     pw = PostgreSQLWrapper()
     pw.notify_manager.include_listener(pl)
 
-    service.app.include_router(router=emotion_router, prefix='/emotion')
+    service.app.include_router(router=emotion_router, prefix="/emotion")
 
     return service.runnable  # type: ignore

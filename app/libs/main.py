@@ -1,9 +1,14 @@
 from pydantic import UUID4
 
-from app.libs.psycho_analyze.analyze import calculate_coef, get_advice, get_text_sents, message_get_psycho_metrics, sents_get_psycho_metrics
+from app.libs.psycho_analyze.analyze import (
+    calculate_coef, 
+    get_advice, 
+    get_text_sents, 
+    message_get_psycho_metrics, 
+    sents_get_psycho_metrics)
 from app.schemas.messages import MessageBase, MessageWithEmotions
 from app.libs.psycho_analyze.daily_analyze import get_recommendation, get_text_recomandation
-
+from app.libs.postres_crud.queries import write_message_advice
 
 async def psycho_text_analyze(message: MessageBase):
     """Основная функция, в которой сообщения проходит весь пайплайн предобработки и вычесления метрик 
@@ -33,8 +38,8 @@ async def psycho_text_analyze(message: MessageBase):
                 advice_id=advice.advice_id
             )
         )
-    print(message_with_emotion)
-    return message_with_emotion
+    #Запись в базу
+    write_message_advice(message_with_emotion)
 
 
 async def daily_recommendation(user_id: UUID4):

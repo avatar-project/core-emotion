@@ -1,9 +1,11 @@
 from typing import List
 from platform_services.postgresql.injectors import async_session
+from app.schemas.messages import MessageWithEmotions
+
 
 async def get_all_advices() -> List[dict]:
     """
-        create sql query to get advices
+    create sql query to get advices
     """
     session = async_session()
     query = await session.execute("select * from advice")
@@ -14,7 +16,7 @@ async def get_all_advices() -> List[dict]:
 
 async def get_user_emotion_a_message(chat_id, user_id, from_at, to_at) -> List[dict]:
     """
-        Все сообщения пользователя в чате за промежуток времени от from_at до to_ad с эмоциями и советами если они есть.
+    Все сообщения пользователя в чате за промежуток времени от from_at до to_ad с эмоциями и советами если они есть.
     """
     sql_quary = """
     select ma.user_id, ms.chat_id, ms.created_at, ma.advice_id, ad.*  from message_advice ma
@@ -23,18 +25,19 @@ async def get_user_emotion_a_message(chat_id, user_id, from_at, to_at) -> List[d
         where ma.chat_id = '{}'
         and ma.user_id = '{}'
         and ms.created_at between '{}' 
-        and '{}'""".format(chat_id,user_id,from_at,to_at)
+        and '{}'""".format(
+        chat_id, user_id, from_at, to_at
+    )
     session = async_session()
     query = await session.execute(sql_quary)
     query = query.fetchall()
     await session.close()
     return query
-    
 
 
-async def get_last_user_advice_with_emotion(user_id, emotion: str, is_sender: bool) :
+async def get_last_user_advice_with_emotion(user_id, emotion: str, is_sender: bool):
     """
-        Получить последний совет пользователя, с выбранной эмоцией (без привязки к чату), может вернуться None
+    Получить последний совет пользователя, с выбранной эмоцией (без привязки к чату), может вернуться None
     """
     sql_query = """
     select ma.user_id, ma.advice_id, ad.*  from message_advice ma
@@ -44,20 +47,25 @@ async def get_last_user_advice_with_emotion(user_id, emotion: str, is_sender: bo
         and ad.emotion = '{}'
         and ad.is_sender = {}
         order by ms.created_at desc
-        limit 1""".format(user_id,emotion,is_sender)
+        limit 1""".format(
+        user_id, emotion, is_sender
+    )
     session = async_session()
     query = await session.execute(sql_query)
     query = query.one_or_none()
     await session.close()
     return query
 
-async def get_chat_users(message_id)-> List[dict]:
+
+async def get_chat_users(message_id) -> List[dict]:
     """
     Получить id и имя пользователей в личном чате
     """
     sql_query = """select u.user_id, u.username, u.firstname, u.lastname from messages ms
         join users u on ms.user_id = u.user_id
-        where ms.message_id = {}""".format(message_id)
+        where ms.message_id = {}""".format(
+        message_id
+    )
 
     session = async_session()
     query = await session.execute(sql_query)
@@ -66,19 +74,41 @@ async def get_chat_users(message_id)-> List[dict]:
     return query
 
 
-
 async def get_user_all_emotion_messages(user_id, from_at, to_at) -> List[dict]:
     """
-        Все сообщения пользователя за промежуток времени от from_at до to_ad с эмоциями из всех чатов.
+    Все сообщения пользователя за промежуток времени от from_at до to_ad с эмоциями из всех чатов.
     """
-    sql_query="""
+    sql_query = """
         select ma.user_id, ms.chat_id, ms.created_at, ma.emotion, ma.advice_id  from message_advice ma
         join messages ms on ma.message_id = ms.message_id
         where ma.user_id = '{}'
         and ms.created_at between '{}' and '{}'
-    """.format(user_id,from_at,to_at)
+    """.format(
+        user_id, from_at, to_at
+    )
     session = async_session()
     query = await session.execute(sql_query)
     query = query.fetchall()
+    await session.close()
+    return query
+
+
+async def write_message_advice(message_advices: List[MessageWithEmotions]):
+    string = ""
+    for row in message_advices:
+        string + "({chat_id},{user_id},{message_id},{emotion},{advice_id}),".format(
+            chat_id=row.chat_id,
+            user_id=row.user_id,
+            message_id=row.message_id,
+            emotion=row.emotion,
+            advice_id=row.advice_id
+        )
+
+    sql_query = """
+    insert into (chat_id,user_id,message_id,emotion,advice_id) values
+    """ + string[len(string)-1]+";"
+    session = async_session()
+    query = await session.execute(sql_query)
+    await session.commit()
     await session.close()
     return query

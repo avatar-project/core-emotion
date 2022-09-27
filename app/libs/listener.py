@@ -1,6 +1,6 @@
 from platform_services.postgresql import PostgreSQListener
 from app.schemas.messages import MessageListener, MessageWithEmotions, MessageBase
-from platform_services.postgresql.injectors import get_session, sessions, async_session
+from platform_services.postgresql.injectors import async_session
 from app.libs.main import psycho_text_analyze
 
 pl = PostgreSQListener()
