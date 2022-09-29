@@ -6,7 +6,7 @@ from app.libs.main import psycho_text_analyze
 pl = PostgreSQListener()
 
 
-@pl.listen_channel("messenger/message/new")
+@pl.listen_channel("/messenger/message/new")
 async def listen_message(payload: MessageListener):
     session2 = async_session()
     sql_query = """SELECT chat_id, message_id, user_id, created_at,content 
@@ -24,3 +24,8 @@ async def listen_message(payload: MessageListener):
     # query = await session2.execute("SELECT * FROM messages")
     # print(query.fetchall())
     # await session2.close()
+
+
+@pl.listen_channel("/messenger/advice/new")
+async def listen_message(payload: str):
+    print(payload)

@@ -1,7 +1,7 @@
 from typing import List
 from platform_services.postgresql.injectors import async_session
 from app.schemas.messages import MessageWithEmotions
-
+from app.pg_model.message_advice import MessageAdvice
 
 async def get_all_advices() -> List[dict]:
     """
@@ -94,21 +94,14 @@ async def get_user_all_emotion_messages(user_id, from_at, to_at) -> List[dict]:
 
 
 async def write_message_advice(message_advices: List[MessageWithEmotions]):
-    string = ""
-    for row in message_advices:
-        string + "({chat_id},{user_id},{message_id},{emotion},{advice_id}),".format(
-            chat_id=row.chat_id,
-            user_id=row.user_id,
-            message_id=row.message_id,
-            emotion=row.emotion,
-            advice_id=row.advice_id
-        )
-
-    sql_query = """
-    insert into (chat_id,user_id,message_id,emotion,advice_id) values
-    """ + string[len(string)-1]+";"
-    session = async_session()
-    query = await session.execute(sql_query)
-    await session.commit()
-    await session.close()
-    return query
+    print("PRINT",message_advices[0].dict())
+    async with async_session() as session:
+        try:
+            mass = [MessageAdvice(**advice.dict()) for advice in message_advices]
+            # session = 
+            session.add_all(mass)
+            await session.commit()
+            await session.flush()
+        except Exception as e:
+            print(f"ERROR = {e}")
+        

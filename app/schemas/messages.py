@@ -32,7 +32,7 @@ class MessageWithEmotions(BaseModel):
     chat_id: UUID4
     user_id: UUID4
     message_id: int
-    emotion: EmotionType
+    emotion: str
     advice_id: Optional[UUID4]
 
 
