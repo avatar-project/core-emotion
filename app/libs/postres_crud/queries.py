@@ -5,7 +5,7 @@ from app.pg_model.message_advice import MessageAdvice
 
 async def get_all_advices() -> List[dict]:
     """
-    create sql query to get advices
+    Получить все рекомендации
     """
     session = async_session()
     query = await session.execute("select * from advice")
@@ -59,11 +59,15 @@ async def get_last_user_advice_with_emotion(user_id, emotion: str, is_sender: bo
 
 async def get_chat_users(message_id) -> List[dict]:
     """
-    Получить id и имя пользователей в личном чате
+    Получить id и имя пользователей в личном чате (Сейчас будут работать 
+    только персональные чаты, при корректировке запроса смогут работать и групповые)
     """
     sql_query = """select u.user_id, u.username, u.firstname, u.lastname from messages ms
-        join users u on ms.user_id = u.user_id
-        where ms.message_id = {}""".format(
+        join personal_chats pch on pch.chat_id = ms.chat_id
+        join chat_user cu on cu.chat_id = pch.chat_id
+        join users u on u.user_id = cu.user_id 
+        where ms.message_id = {}
+        """.format(
         message_id
     )
 
@@ -94,7 +98,6 @@ async def get_user_all_emotion_messages(user_id, from_at, to_at) -> List[dict]:
 
 
 async def write_message_advice(message_advices: List[MessageWithEmotions]):
-    print("PRINT",message_advices[0].dict())
     async with async_session() as session:
         try:
             mass = [MessageAdvice(**advice.dict()) for advice in message_advices]

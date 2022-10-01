@@ -9,23 +9,12 @@ pl = PostgreSQListener()
 @pl.listen_channel("/messenger/message/new")
 async def listen_message(payload: MessageListener):
     session2 = async_session()
-    sql_query = """SELECT chat_id, message_id, user_id, created_at,content 
-        FROM messages WHERE message_id = {} and chat_id='{}'""".format(payload.message_id,payload.chat_id)
+    sql_query = """SELECT ms.chat_id, ms.message_id, ms.user_id, ms.created_at,ms.content FROM messages ms
+        join personal_chats pch on pch.chat_id = ms.chat_id
+        WHERE ms.message_id = {} and 
+        ms.chat_id='{}'""".format(payload.message_id,payload.chat_id)
     query = await session2.execute(sql_query)
     query = query.one_or_none()
-    await session2.close()
-    await psycho_text_analyze(query)
-
-
-# @pl.listen_channel("messenger/advice/new")
-# async def listen_message(payload: str):
-#     print(payload)
-    # session2 = async_session()
-    # query = await session2.execute("SELECT * FROM messages")
-    # print(query.fetchall())
-    # await session2.close()
-
-
-@pl.listen_channel("/messenger/advice/new")
-async def listen_message(payload: str):
-    print(payload)
+    if query is not None:
+        await session2.close()
+        await psycho_text_analyze(query)
