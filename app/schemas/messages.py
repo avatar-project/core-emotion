@@ -40,3 +40,13 @@ class MessageListener(BaseModel):
     message_id: int
     chat_id: UUID4
 
+class SimpleAdvice(BaseModel):
+    text :str
+    emotion:str
+
+class MessageWithAdvice(MessageWithEmotions):
+    advice_type: str = "emotion"
+    data: SimpleAdvice
+    
+
+

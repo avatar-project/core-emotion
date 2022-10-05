@@ -1,7 +1,11 @@
 from typing import List
 from platform_services.postgresql.injectors import async_session
-from app.schemas.messages import MessageWithEmotions
-from app.pg_model.message_advice import MessageAdvice
+from app.schemas.messages import MessageWithEmotions, MessageWithAdvice, SimpleAdvice
+from app.schemas.adivce import Advice as AdviceSchema, AdviceBody
+from app.pg_model.message_advice import MessageAdvice, Advice
+from app.rabbitmq.producer import mailer_advice
+from pydantic import parse_obj_as
+from sqlalchemy import select
 
 async def get_all_advices() -> List[dict]:
     """
@@ -101,10 +105,23 @@ async def write_message_advice(message_advices: List[MessageWithEmotions]):
     async with async_session() as session:
         try:
             mass = [MessageAdvice(**advice.dict()) for advice in message_advices]
-            # session = 
             session.add_all(mass)
             await session.commit()
             await session.flush()
         except Exception as e:
             print(f"ERROR = {e}")
-        
+        #TODO проверить работу 
+        result = await session.execute(select(Advice.text,Advice.emotion,Advice.advice_id)
+                                .where(Advice.advice_id.in_((_advice.advice_id for _advice in message_advices))))
+        advice_models:List[Advice] = result.fetchall()
+        # Перегоняем модели в схемы для удобства работы
+        advice_schemas:List[MessageWithAdvice] = []
+        for ms in message_advices:
+            for ad in advice_models:
+                if ms.advice_id == ad.advice_id:    
+                    advice_schemas.append(MessageWithAdvice(
+                        advice=AdviceBody(advice_id=ad.advice_id),
+                        body=SimpleAdvice(text=ad.text, emotion=ad.emotion),
+                        **ms.dict()))
+        # advice_schemas = parse_obj_as(List[AdviceSchema], advice_models)
+    await mailer_advice(advice_schemas)
