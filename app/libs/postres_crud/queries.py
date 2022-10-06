@@ -111,11 +111,15 @@ async def write_message_advice(message_advices: List[MessageWithEmotions]):
         except Exception as e:
             print(f"ERROR = {e}")
         #TODO проверить работу 
+        print("GRABER",[_advice.advice_id for _advice in message_advices])
         result = await session.execute(select(Advice.text,Advice.emotion,Advice.advice_id)
                                 .where(Advice.advice_id.in_((_advice.advice_id for _advice in message_advices))))
         advice_models:List[Advice] = result.fetchall()
         # Перегоняем модели в схемы для удобства работы
         advice_schemas:List[MessageWithAdvice] = []
+        print(message_advices)
+        print('___________________________')
+        print(advice_models)
         for ms in message_advices:
             for ad in advice_models:
                 if ms.advice_id == ad.advice_id:    
