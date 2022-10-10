@@ -22,12 +22,13 @@ async def get_user_emotion_a_message(chat_id, user_id, from_at, to_at) -> List[d
     """
     Все сообщения пользователя в чате за промежуток времени от from_at до to_ad с эмоциями и советами если они есть.
     """
+
     sql_quary = """
-    select ma.user_id, ms.chat_id, ms.created_at, ma.advice_id, ad.*  from message_advice ma
-        join messages ms on ma.message_id = ms.message_id
-        join advice ad on ad.advice_id = ma.advice_id
-        where ma.chat_id = '{}'
-        and ma.user_id = '{}'
+    select ad.advice_id, ad.emotion, ms.message_id, ms.user_id  from messages ms
+        join message_advice ad on ms.message_id = ad.message_id
+        left join advice adv on adv.advice_id = ad.advice_id
+        where ad.chat_id = '{}'
+        and ad.user_id = '{}'
         and ms.created_at between '{}' 
         and '{}'""".format(
         chat_id, user_id, from_at, to_at
