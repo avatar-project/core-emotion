@@ -139,18 +139,18 @@ async def write_message_advice(message_advices: List[MessageWithEmotions]):
                         ))
         else:
             for ms in message_advices:
-                for ad in advice_models:
-                    if ms.advice_id == ad[-1]:
-                        advice_schemas.append(AdvicePayloadNew(
-                            chat_id=ms.chat_id,
-                            message_id=ms.message_id,
-                            user_id=ms.user_id,
-                            advice = AdviceBody(
-                                advice_id=ms.advice_id,
-                                data=AdviceDataNew(
-                                    # text=ad[0],
-                                    emotion=ms.emotion
-                                )
+                advice_schemas.append(
+                    AdvicePayloadNew(
+                        chat_id=ms.chat_id,
+                        message_id=ms.message_id,
+                        user_id=ms.user_id,
+                        advice = AdviceBodyNew(
+                            advice_id=ms.advice_id,
+                            data=AdviceDataNew(
+                                text=None,
+                                emotion=ms.emotion
                             )
-                        ))
+                        )
+                    )
+                )
     await mailer_advice(advice_schemas)

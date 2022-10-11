@@ -81,7 +81,7 @@ async def calculate_coef(message_with_emotion: dict, sents_emotion_list: List[di
     emotion_value_list = []
     for emotion in emotion_list:
         emotion_value_list.append(emotion_dict[emotion])
-    print(f'emotion_list {emotion_value_list}')
+    # print(f'emotion_list {emotion_value_list}')
 
     if len(emotion_value_list) == 1:
         return EmotionType(emotion_value_list[0])

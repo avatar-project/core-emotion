@@ -1,7 +1,7 @@
 from platform_services.rabbitmq import RabbitMQWrapper
 from aio_pika import Message, DeliveryMode
 from app.schemas.adivce import AdviceResponce, AdvicePayload, Advice, AdviceBody, AdviceData
-from app.schemas.messages import MessageWithEmotions, MessageWithAdvice, AdvicePayloadNew
+from app.schemas.messages import MessageWithEmotions, MessageWithAdvice, AdvicePayloadNew, AdviceResponceNew
 from typing import List
 import asyncio
 
@@ -18,7 +18,7 @@ async def mailer_advice(messages_with_advices: List[AdvicePayloadNew]):
 async def push_processed_asset(payload: AdvicePayloadNew) -> None:
     """Отправляем структуру в sse"""
     #Переводим в итоговую схему респонса
-    frame_message = AdviceResponce(
+    frame_message = AdviceResponceNew(
         payload=payload
     )
     body = frame_message.json().encode()
@@ -30,4 +30,4 @@ async def push_processed_asset(payload: AdvicePayloadNew) -> None:
         ), 
         routing_key=str(payload.user_id)
     )
-    # print(f"Processed asset published {payload}")
+    print(f"Processed asset published {payload}")
