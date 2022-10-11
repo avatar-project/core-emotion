@@ -25,6 +25,7 @@ async def psycho_text_analyze(message: MessageBase):
     message_emotion = await calculate_coef(message_with_emotion, sents_emotion_list)
     # Получаем совет
     advices = await get_advice(message, message_emotion)
+    print("###"*30)
     # готовим данные к возврату
     message_with_emotion = []
     # print(advices)

@@ -1,7 +1,7 @@
 import random
 
 from typing import List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.libs.emotion.emotion_detect import Emotion
 from app.libs.toxic.mat_filter import count_mat_detect
@@ -70,22 +70,36 @@ async def calculate_coef(message_with_emotion: dict, sents_emotion_list: List[di
             emotion_list.append(i)
     if max_coeffs == 0:
         return EmotionType.NEUTRAL
+    emotion_dict = {
+        0: 'neutral',
+        1: 'joy',
+        2: 'sadness',
+        3: 'surprise',
+        4: 'fear',
+        5: 'anger'
+    }
+    emotion_value_list = []
+    for emotion in emotion_list:
+        emotion_value_list.append(emotion_dict[emotion])
+    print(f'emotion_list {emotion_value_list}')
 
-    if len(emotion_list) == 1:
-        return EmotionType(emotion_list[0])
-    elif EmotionType.SADNESS.value in emotion_list:
+    if len(emotion_value_list) == 1:
+        return EmotionType(emotion_value_list[0])
+    elif EmotionType.SADNESS.value in emotion_value_list:
         return EmotionType.SADNESS
-    elif EmotionType.JOY.value in emotion_list:
+    elif EmotionType.JOY.value in emotion_value_list:
         return EmotionType.JOY
-    elif EmotionType.FEAR.value in emotion_list:
+    elif EmotionType.FEAR.value in emotion_value_list:
         return EmotionType.FEAR
 
     return EmotionType.NEUTRAL
 
 
 async def get_advice(message: MessageBase, message_emotion: EmotionType) -> List[Advice]:
-    users = await get_chat_users(message.message_id)  # Все пользователи которые относятся к этому сообщению
+    EMOTION_COUNT = 3
 
+    users = await get_chat_users(message.message_id)  # Все пользователи которые относятся к этому сообщению
+    # print(f'get_advice {message_emotion}')
     # Заполняем советы дефолтными None, если совета не будет
     advices_to_user = []
     for user in users:
@@ -101,14 +115,15 @@ async def get_advice(message: MessageBase, message_emotion: EmotionType) -> List
     # Для отправителя получаем его сообщения в чате за последний час
     user_messages = await get_user_emotion_a_message(chat_id=message.chat_id,
                                                      user_id=message.user_id,
-                                                     from_at=datetime.now() - timedelta(hours=1),
-                                                     to_at=datetime.now())
+                                                     from_at=datetime.now(timezone.utc) - timedelta(hours=1),
+                                                     to_at=datetime.now(timezone.utc))
 
     user_emotions = {}
     last_advice_message = None
-
+    print(f'user_message {user_messages}')
     # Смотрим, был ли совет за последний час, если по такой же эмоции был, то возвращаем дефолт
     for user_message in user_messages:
+
         if user_message['advice_id']:
             last_advice_message = user_message
             if user_message['emotion'].lower() == message_emotion.name.lower():
@@ -123,13 +138,15 @@ async def get_advice(message: MessageBase, message_emotion: EmotionType) -> List
     current_emotion_count = user_emotions.get(message_emotion.name.lower(), 0)
 
     if last_advice_message:
+        print(f'last_advice_message: {current_emotion_count}')
         last_advice_emotion_count = user_emotions.get(last_advice_message['emotion'].lower(), 0)
-        if current_emotion_count > 3 and current_emotion_count >= last_advice_emotion_count:
+        print(last_advice_emotion_count)
+        if current_emotion_count > EMOTION_COUNT and current_emotion_count >= last_advice_emotion_count:
             return await get_current_advice(message, message_emotion, users)
         else:
             return advices_to_user
     else:
-        if current_emotion_count > 3:
+        if current_emotion_count > EMOTION_COUNT:
             return await get_current_advice(message, message_emotion, users)
         else:
             return advices_to_user
