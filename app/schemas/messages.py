@@ -1,5 +1,6 @@
 import datetime
 from enum import Enum
+from re import L
 from typing import List, Optional
 from uuid import uuid4
 from pydantic import UUID4, BaseModel, Field
@@ -46,7 +47,27 @@ class SimpleAdvice(BaseModel):
 
 class MessageWithAdvice(MessageWithEmotions):
     advice_type: str = "emotion"
+    advice_id: Optional[UUID4]
     data: SimpleAdvice
     
 
 
+#__________________________________________
+class AdviceDataNew(BaseModel):
+    text: Optional[str]
+    emotion: str
+
+class AdviceBodyNew(BaseModel):
+    advice_type:str = "emotion"
+    advice_id: Optional[UUID4]
+    data: AdviceDataNew
+
+class AdvicePayloadNew(BaseModel):
+    chat_id: UUID4
+    message_id: int
+    user_id: UUID4
+    advice: AdviceBodyNew
+
+class AdviceResponceNew(BaseModel):
+    event_type: str = "advice"
+    payload: AdvicePayloadNew

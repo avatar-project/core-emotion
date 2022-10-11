@@ -40,7 +40,7 @@ async def psycho_text_analyze(message: MessageBase):
             )
         )
     #Запись в базу
-    print(message_with_emotion)
+    # print(message_with_emotion)
     await write_message_advice(message_with_emotion)
 
 

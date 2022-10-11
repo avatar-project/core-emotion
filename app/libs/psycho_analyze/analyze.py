@@ -61,7 +61,7 @@ async def calculate_coef(message_with_emotion: dict, sents_emotion_list: List[di
 
     max_coeffs = 0
     emotion_list = []
-    print(emotion_coeffs)
+    # print(emotion_coeffs)
     for i, element in enumerate(emotion_coeffs):
         if element > max_coeffs:
             max_coeffs = element
@@ -120,7 +120,7 @@ async def get_advice(message: MessageBase, message_emotion: EmotionType) -> List
 
     user_emotions = {}
     last_advice_message = None
-    print(f'user_message {user_messages}')
+    # print(f'user_message {user_messages}')
     # Смотрим, был ли совет за последний час, если по такой же эмоции был, то возвращаем дефолт
     for user_message in user_messages:
 
@@ -138,9 +138,9 @@ async def get_advice(message: MessageBase, message_emotion: EmotionType) -> List
     current_emotion_count = user_emotions.get(message_emotion.name.lower(), 0)
 
     if last_advice_message:
-        print(f'last_advice_message: {current_emotion_count}')
+        # print(f'last_advice_message: {current_emotion_count}')
         last_advice_emotion_count = user_emotions.get(last_advice_message['emotion'].lower(), 0)
-        print(last_advice_emotion_count)
+        # print(last_advice_emotion_count)
         if current_emotion_count > EMOTION_COUNT and current_emotion_count >= last_advice_emotion_count:
             return await get_current_advice(message, message_emotion, users)
         else:

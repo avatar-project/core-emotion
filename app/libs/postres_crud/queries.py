@@ -1,6 +1,6 @@
 from typing import List
 from platform_services.postgresql.injectors import async_session
-from app.schemas.messages import MessageWithEmotions, MessageWithAdvice, SimpleAdvice
+from app.schemas.messages import MessageWithEmotions, MessageWithAdvice, SimpleAdvice, AdvicePayloadNew, AdviceBodyNew, AdviceDataNew
 from app.schemas.adivce import Advice as AdviceSchema, AdviceBody
 from app.pg_model.message_advice import MessageAdvice, Advice
 from app.rabbitmq.producer import mailer_advice
@@ -112,21 +112,45 @@ async def write_message_advice(message_advices: List[MessageWithEmotions]):
         except Exception as e:
             print(f"ERROR = {e}")
         #TODO проверить работу 
-        print("GRABER",[_advice.advice_id for _advice in message_advices])
         result = await session.execute(select(Advice.text,Advice.emotion,Advice.advice_id)
                                 .where(Advice.advice_id.in_((_advice.advice_id for _advice in message_advices))))
-        advice_models:List[Advice] = result.fetchall()
+
+        # получаем текст совета
+        advice_models:list = result.fetchall()
+
         # Перегоняем модели в схемы для удобства работы
         advice_schemas:List[MessageWithAdvice] = []
-        print(message_advices)
-        print('___________________________')
-        print(advice_models)
-        for ms in message_advices:
-            for ad in advice_models:
-                if ms.advice_id == ad.advice_id:    
-                    advice_schemas.append(MessageWithAdvice(
-                        advice=AdviceBody(advice_id=ad.advice_id),
-                        body=SimpleAdvice(text=ad.text, emotion=ad.emotion),
-                        **ms.dict()))
-        # advice_schemas = parse_obj_as(List[AdviceSchema], advice_models)
+
+        if len(advice_models) > 0:
+            for ms in message_advices:
+                for ad in advice_models:
+                    if ms.advice_id == ad[-1]:
+                        advice_schemas.append(AdvicePayloadNew(
+                            chat_id=ms.chat_id,
+                            message_id=ms.message_id,
+                            user_id=ms.user_id,
+                            advice = AdviceBody(
+                                advice_id=ms.advice_id,
+                                data=AdviceDataNew(
+                                    text=ad[0],
+                                    emotion=ms.emotion
+                                )
+                            )
+                        ))
+        else:
+            for ms in message_advices:
+                for ad in advice_models:
+                    if ms.advice_id == ad[-1]:
+                        advice_schemas.append(AdvicePayloadNew(
+                            chat_id=ms.chat_id,
+                            message_id=ms.message_id,
+                            user_id=ms.user_id,
+                            advice = AdviceBody(
+                                advice_id=ms.advice_id,
+                                data=AdviceDataNew(
+                                    # text=ad[0],
+                                    emotion=ms.emotion
+                                )
+                            )
+                        ))
     await mailer_advice(advice_schemas)

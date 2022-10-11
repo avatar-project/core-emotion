@@ -22,28 +22,24 @@ class Advice(BaseModel):
         orm_mode: True
 
 
-
-class AdviceData: # не смотрел еще какие там поля извлекаются
+class AdviceData(BaseModel): # не смотрел еще какие там поля извлекаются
   text: str
   emotion: str
 
 
-class AdviceBody:
+class AdviceBody(BaseModel):
   advice_type: str = "emotion"
   data: AdviceData
   advice_id: UUID4
 
 
-class AdvicePayload:
+class AdvicePayload(BaseModel):
   chat_id: UUID4
   message_id: int
   user_id: UUID4
   advice: AdviceBody
 
 
-class AdviceResponce:
+class AdviceResponce(BaseModel):
   event_type: str = "advice"
   payload: AdvicePayload
-
-
-

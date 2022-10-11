@@ -10,6 +10,8 @@ from platform_services.service import PlatformService, get_general_settings
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from app.libs.listener import pl
 from uvicorn import run
+from app.rabbitmq.producer import rmq
+import asyncio
 
 from app.routers.emotion import emotion_router
 
@@ -49,6 +51,7 @@ def create_app() -> Union[FastAPI, SentryAsgiMiddleware]:
     )
     pw = PostgreSQLWrapper()
     pw.notify_manager.include_listener(pl)
+    asyncio.create_task(rmq.startup_event_handler())
 
     service.app.include_router(router=emotion_router, prefix="/emotion")
 
