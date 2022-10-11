@@ -30,4 +30,4 @@ async def push_processed_asset(payload: AdvicePayloadNew) -> None:
         ), 
         routing_key=str(payload.user_id)
     )
-    print(f"Processed asset published {payload}")
+    # print(f"Processed asset published {payload}")

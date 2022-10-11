@@ -122,35 +122,47 @@ async def write_message_advice(message_advices: List[MessageWithEmotions]):
         advice_schemas:List[MessageWithAdvice] = []
 
         if len(advice_models) > 0:
-            for ms in message_advices:
-                for ad in advice_models:
-                    if ms.advice_id == ad[-1]:
-                        advice_schemas.append(AdvicePayloadNew(
-                            chat_id=ms.chat_id,
-                            message_id=ms.message_id,
-                            user_id=ms.user_id,
-                            advice = AdviceBody(
-                                advice_id=ms.advice_id,
-                                data=AdviceDataNew(
-                                    text=ad[0],
-                                    emotion=ms.emotion
-                                )
-                            )
-                        ))
+            await send_emotion_with_advice(message_advices, advice_models, advice_schemas)
         else:
-            for ms in message_advices:
-                advice_schemas.append(
-                    AdvicePayloadNew(
-                        chat_id=ms.chat_id,
-                        message_id=ms.message_id,
-                        user_id=ms.user_id,
-                        advice = AdviceBodyNew(
-                            advice_id=ms.advice_id,
-                            data=AdviceDataNew(
-                                text=None,
-                                emotion=ms.emotion
-                            )
-                        )
+            await send_emotion_without_advice(message_advices, advice_schemas) 
+    await mailer_advice(advice_schemas)
+
+# Надо рассмотреть рефакторинг
+async def send_emotion_without_advice(message_advices:List[MessageWithEmotions], advice_schemas:list):
+    """Отправка сообщений с эмоцией но без совета"""
+    for ms in message_advices:
+        advice_schemas.append(
+            AdvicePayloadNew(
+                chat_id=ms.chat_id,
+                message_id=ms.message_id,
+                user_id=ms.user_id,
+                advice = AdviceBodyNew(
+                    advice_id=ms.advice_id,
+                    data=AdviceDataNew(
+                        text=None,
+                        emotion=ms.emotion
                     )
                 )
-    await mailer_advice(advice_schemas)
+            )
+        )
+
+async def send_emotion_with_advice(
+    message_advices:List[MessageWithEmotions], 
+    advice_models:list, 
+    advice_schemas:list):
+    """Отправка емоций, с советом"""
+    for ms in message_advices:
+        for ad in advice_models:
+            if ms.advice_id == ad[-1]:
+                advice_schemas.append(AdvicePayloadNew(
+                    chat_id=ms.chat_id,
+                    message_id=ms.message_id,
+                    user_id=ms.user_id,
+                    advice = AdviceBody(
+                        advice_id=ms.advice_id,
+                        data=AdviceDataNew(
+                            text=ad[0],
+                            emotion=ms.emotion
+                        )
+                    )
+                ))
