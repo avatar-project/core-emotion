@@ -23,11 +23,9 @@ async def push_processed_asset(payload: AdvicePayloadNew) -> None:
         payload=payload
     )
     body = frame_message.json().encode()
-    print("Magick")
     try:
         channel = await rmq._get_channel()
         user = await channel.get_queue(str(payload.user_id))
-        print("Magick 2")
         await channel.default_exchange.publish(
             Message(
                 body=body,
