@@ -6,6 +6,11 @@ from app.pg_model.message_advice import MessageAdvice, Advice
 from app.rabbitmq.producer import mailer_advice
 from pydantic import parse_obj_as
 from sqlalchemy import select
+from logging import getLogger
+
+
+logger = getLogger("db-exeptions")
+
 
 async def get_all_advices() -> List[dict]:
     """
@@ -27,12 +32,12 @@ async def get_user_emotion_a_message(chat_id, user_id, from_at, to_at) -> List[d
     select ad.advice_id, ad.emotion, ms.message_id, ms.user_id  from messages ms
         join message_advice ad on ms.message_id = ad.message_id
         left join advice adv on adv.advice_id = ad.advice_id
-        where ad.chat_id = %(chat_id)s
-        and ad.user_id = %(user_id)s
-        and ms.created_at between %(from_at)s
-        and %(to_at)s"""
+        where ad.chat_id = :chat_id
+        and ad.user_id = :user_id
+        and ms.created_at between :from_at
+        and :to_at"""
     session = async_session()
-    query = await session.execute(sql_quary, {"chat_id":chat_id, "user_id":user_id, "from_at":from_at, "to_at":to_at})
+    query = await session.execute(sql_quary, {"chat_id":chat_id, "user_id":user_id, "from_at":from_at.replace(tzinfo=None), "to_at":to_at.replace(tzinfo=None)})
     query = query.fetchall()
     await session.close()
     return query
@@ -46,9 +51,9 @@ async def get_last_user_advice_with_emotion(user_id, emotion: str, is_sender: bo
     select ma.user_id, ma.advice_id, ad.*  from message_advice ma
         join messages ms on ma.message_id = ms.message_id
         join advice ad on ad.advice_id = ma.advice_id
-        where ma.user_id = '{}'
-        and ad.emotion = '{}'
-        and ad.is_sender = {}
+        where ma.user_id = :user_id
+        and ad.emotion = :emotion
+        and ad.is_sender = :is_sender
         order by ms.created_at desc
         limit 1"""
     session = async_session()
@@ -67,13 +72,10 @@ async def get_chat_users(message_id) -> List[dict]:
         join personal_chats pch on pch.chat_id = ms.chat_id
         join chat_user cu on cu.chat_id = pch.chat_id
         join users u on u.user_id = cu.user_id 
-        where ms.message_id = {}
-        """.format(
-        message_id
-    )
-
+        where ms.message_id = :message_id
+        """
     session = async_session()
-    query = await session.execute(sql_query)
+    query = await session.execute(sql_query, {"message_id":message_id})
     query = query.fetchall()
     await session.close()
     return query
@@ -86,13 +88,11 @@ async def get_user_all_emotion_messages(user_id, from_at, to_at) -> List[dict]:
     sql_query = """
         select ma.user_id, ms.chat_id, ms.created_at, ma.emotion, ma.advice_id  from message_advice ma
         join messages ms on ma.message_id = ms.message_id
-        where ma.user_id = '{}'
-        and ms.created_at between '{}' and '{}'
-    """.format(
-        user_id, from_at, to_at
-    )
+        where ma.user_id = :user_id
+        and ms.created_at between :from_at and :to_at
+    """
     session = async_session()
-    query = await session.execute(sql_query)
+    query = await session.execute(sql_query, {"user_id":user_id,"from_at":from_at, "to_at":to_at})
     query = query.fetchall()
     await session.close()
     return query
@@ -106,7 +106,7 @@ async def write_message_advice(message_advices: List[MessageWithEmotions]):
             await session.commit()
             await session.flush()
         except Exception as e:
-            print(f"ERROR = {e}")
+            logger.exception(f"WRITE message advice= {e}")
         #TODO проверить работу 
         result = await session.execute(select(Advice.text,Advice.emotion,Advice.advice_id)
                                 .where(Advice.advice_id.in_((_advice.advice_id for _advice in message_advices))))
@@ -116,14 +116,15 @@ async def write_message_advice(message_advices: List[MessageWithEmotions]):
 
         # Перегоняем модели в схемы для удобства работы
         advice_schemas:List[MessageWithAdvice] = []
-
+        
+        # List ссылочный тип, это сво-во использую 
         if len(advice_models) > 0:
             await send_emotion_with_advice(message_advices, advice_models, advice_schemas)
         else:
             await send_emotion_without_advice(message_advices, advice_schemas) 
     await mailer_advice(advice_schemas)
 
-# Надо рассмотреть рефакторинг
+# Надо рассмотреть рефакторинг/но работает быстрее чем через alchemy хз почему
 async def send_emotion_without_advice(message_advices:List[MessageWithEmotions], advice_schemas:list):
     """Отправка сообщений с эмоцией но без совета"""
     for ms in message_advices:
@@ -142,6 +143,7 @@ async def send_emotion_without_advice(message_advices:List[MessageWithEmotions],
             )
         )
 
+# Надо рассмотреть рефакторинг
 async def send_emotion_with_advice(
     message_advices:List[MessageWithEmotions], 
     advice_models:list, 
