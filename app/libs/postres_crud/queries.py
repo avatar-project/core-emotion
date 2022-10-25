@@ -27,14 +27,12 @@ async def get_user_emotion_a_message(chat_id, user_id, from_at, to_at) -> List[d
     select ad.advice_id, ad.emotion, ms.message_id, ms.user_id  from messages ms
         join message_advice ad on ms.message_id = ad.message_id
         left join advice adv on adv.advice_id = ad.advice_id
-        where ad.chat_id = '{}'
-        and ad.user_id = '{}'
-        and ms.created_at between '{}' 
-        and '{}'""".format(
-        chat_id, user_id, from_at, to_at
-    )
+        where ad.chat_id = %(chat_id)s
+        and ad.user_id = %(user_id)s
+        and ms.created_at between %(from_at)s
+        and %(to_at)s"""
     session = async_session()
-    query = await session.execute(sql_quary)
+    query = await session.execute(sql_quary, {"chat_id":chat_id, "user_id":user_id, "from_at":from_at, "to_at":to_at})
     query = query.fetchall()
     await session.close()
     return query
@@ -52,11 +50,9 @@ async def get_last_user_advice_with_emotion(user_id, emotion: str, is_sender: bo
         and ad.emotion = '{}'
         and ad.is_sender = {}
         order by ms.created_at desc
-        limit 1""".format(
-        user_id, emotion, is_sender
-    )
+        limit 1"""
     session = async_session()
-    query = await session.execute(sql_query)
+    query = await session.execute(sql_query, {"user_id":user_id, "emotion":emotion, "is_sender":is_sender})
     query = query.one_or_none()
     await session.close()
     return query
