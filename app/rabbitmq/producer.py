@@ -23,9 +23,9 @@ async def push_processed_asset(payload: AdvicePayloadNew) -> None:
         payload=payload
     )
     body = frame_message.json().encode()
-    try:
-        channel = await rmq._get_channel()
-        user = await channel.get_queue(str(payload.user_id))
+    # try:
+    async with rmq.channel_pool.acquire() as channel:
+        # user = await channel.get_queue(str(payload.user_id))
         await channel.default_exchange.publish(
             Message(
                 body=body,
@@ -33,6 +33,6 @@ async def push_processed_asset(payload: AdvicePayloadNew) -> None:
             ), 
             routing_key=str(payload.user_id)
         )
-        logger.info(f'Send to sse {payload.user_id} user')
-    except Exception as e:
-        logger.info(f'User {payload.user_id} offline')
+        # logger.info(f'Send to sse {payload.user_id} user')
+    # except Exception as e:
+    #     logger.info(f'User {payload.user_id} offline')
