@@ -1,11 +1,12 @@
 from typing import List
+from uuid import UUID
 from platform_services.postgresql.injectors import async_session
 from app.schemas.messages import MessageWithEmotions, MessageWithAdvice, SimpleAdvice, AdvicePayloadNew, AdviceBodyNew, AdviceDataNew
-from app.schemas.adivce import Advice as AdviceSchema, AdviceBody
-from app.pg_model.message_advice import MessageAdvice, Advice
+from app.schemas.adivce import Advice as AdviceSchema, AdviceBody, UserStateAdvanced, UserState
+from app.pg_model.message_advice import MessageAdvice, Advice, UserStateModel
 from app.rabbitmq.producer import mailer_advice
 from pydantic import parse_obj_as
-from sqlalchemy import select
+from sqlalchemy import select, update
 from logging import getLogger
 
 
@@ -37,7 +38,7 @@ async def get_user_emotion_a_message(chat_id, user_id, from_at, to_at) -> List[d
         and ms.created_at between :from_at
         and :to_at"""
     session = async_session()
-    query = await session.execute(sql_quary, {"chat_id":chat_id, "user_id":user_id, "from_at":from_at.replace(tzinfo=None), "to_at":to_at.replace(tzinfo=None)})
+    query = await session.execute(sql_quary, {"chat_id": chat_id, "user_id": user_id, "from_at": from_at.replace(tzinfo=None), "to_at": to_at.replace(tzinfo=None)})
     query = query.fetchall()
     await session.close()
     return query
@@ -57,7 +58,7 @@ async def get_last_user_advice_with_emotion(user_id, emotion: str, is_sender: bo
         order by ms.created_at desc
         limit 1"""
     session = async_session()
-    query = await session.execute(sql_query, {"user_id":user_id, "emotion":emotion, "is_sender":is_sender})
+    query = await session.execute(sql_query, {"user_id": user_id, "emotion": emotion, "is_sender": is_sender})
     query = query.one_or_none()
     await session.close()
     return query
@@ -75,7 +76,7 @@ async def get_chat_users(message_id) -> List[dict]:
         where ms.message_id = :message_id
         """
     session = async_session()
-    query = await session.execute(sql_query, {"message_id":message_id})
+    query = await session.execute(sql_query, {"message_id": message_id})
     query = query.fetchall()
     await session.close()
     return query
@@ -92,7 +93,7 @@ async def get_user_all_emotion_messages(user_id, from_at, to_at) -> List[dict]:
         and ms.created_at between :from_at and :to_at
     """
     session = async_session()
-    query = await session.execute(sql_query, {"user_id":user_id,"from_at":from_at, "to_at":to_at})
+    query = await session.execute(sql_query, {"user_id": user_id, "from_at": from_at, "to_at": to_at})
     query = query.fetchall()
     await session.close()
     return query
@@ -107,25 +108,27 @@ async def write_message_advice(message_advices: List[MessageWithEmotions]):
             await session.flush()
         except Exception as e:
             logger.exception(f"WRITE message advice= {e}")
-        #TODO проверить работу 
-        result = await session.execute(select(Advice.text,Advice.emotion,Advice.advice_id)
-                                .where(Advice.advice_id.in_((_advice.advice_id for _advice in message_advices))))
+        # TODO проверить работу
+        result = await session.execute(select(Advice.text, Advice.emotion, Advice.advice_id)
+                                       .where(Advice.advice_id.in_((_advice.advice_id for _advice in message_advices))))
 
         # получаем текст совета
-        advice_models:list = result.fetchall()
+        advice_models: list = result.fetchall()
 
         # Перегоняем модели в схемы для удобства работы
-        advice_schemas:List[MessageWithAdvice] = []
-        
-        # List ссылочный тип, это сво-во использую 
+        advice_schemas: List[MessageWithAdvice] = []
+
+        # List ссылочный тип, это сво-во использую
         if len(advice_models) > 0:
             await send_emotion_with_advice(message_advices, advice_models, advice_schemas)
         else:
-            await send_emotion_without_advice(message_advices, advice_schemas) 
+            await send_emotion_without_advice(message_advices, advice_schemas)
     await mailer_advice(advice_schemas)
 
 # Надо рассмотреть рефакторинг/но работает быстрее чем через alchemy хз почему
-async def send_emotion_without_advice(message_advices:List[MessageWithEmotions], advice_schemas:list):
+
+
+async def send_emotion_without_advice(message_advices: List[MessageWithEmotions], advice_schemas: list):
     """Отправка сообщений с эмоцией но без совета"""
     for ms in message_advices:
         advice_schemas.append(
@@ -133,7 +136,7 @@ async def send_emotion_without_advice(message_advices:List[MessageWithEmotions],
                 chat_id=ms.chat_id,
                 message_id=ms.message_id,
                 user_id=ms.user_id,
-                advice = AdviceBodyNew(
+                advice=AdviceBodyNew(
                     advice_id=ms.advice_id,
                     data=AdviceDataNew(
                         text=None,
@@ -144,10 +147,12 @@ async def send_emotion_without_advice(message_advices:List[MessageWithEmotions],
         )
 
 # Надо рассмотреть рефакторинг
+
+
 async def send_emotion_with_advice(
-    message_advices:List[MessageWithEmotions], 
-    advice_models:list, 
-    advice_schemas:list):
+        message_advices: List[MessageWithEmotions],
+        advice_models: list,
+        advice_schemas: list):
     """Отправка емоций, с советом"""
     for ms in message_advices:
         for ad in advice_models:
@@ -156,7 +161,7 @@ async def send_emotion_with_advice(
                     chat_id=ms.chat_id,
                     message_id=ms.message_id,
                     user_id=ms.user_id,
-                    advice = AdviceBody(
+                    advice=AdviceBody(
                         advice_id=ms.advice_id,
                         data=AdviceDataNew(
                             text=ad[0],
@@ -164,3 +169,71 @@ async def send_emotion_with_advice(
                         )
                     )
                 ))
+
+
+async def update_user_state(user_state: UserStateAdvanced):
+    """Update user state table
+
+    Args:
+        user_state (UserStateAdvanced): _description_
+    """
+    async with async_session() as session:
+        try:
+            q = (
+                update(UserStateModel)
+                .where(UserStateModel.state_id == user_state.state_id)
+                .values(state=user_state.state, importance=user_state.importance, recommender_id=user_state.recommender_id)
+            )
+            await session.execute(q)
+            await session.commit()
+        except Exception as e:
+            logger.exception(f'UPDATE user state = {e}')
+
+
+async def get_last_user_state(user_id, from_at, to_at) -> List[dict]:
+    """
+    Получить состояние пользователя за последние n дней
+    """
+    sql_query = """
+        select * from user_state ut
+        where ut.user_id = :user_id
+        and ut.date between :from_at and :to_at
+    """
+    session = async_session()
+    query = await session.execute(sql_query, {"user_id": user_id, "from_at": from_at, "to_at": to_at})
+    query = query.fetchall()
+    await session.close()
+    return query
+
+
+async def write_user_state(user_state: UserState):
+    """
+        Сохранить состояние юзера в базу
+    """
+    async with async_session() as session:
+        try:
+            mass = UserStateModel(**user_state.dict())
+            session.add(mass)
+            await session.commit()
+            await session.refresh(mass)
+            state_id = mass.state_id
+        except Exception as e:
+            logger.exception(f"WRITE user state= {e}")
+
+    return state_id
+
+
+async def get_daily_state_recommender(emotion, category) -> List[dict]:
+    """
+    Получить советы по состоянию для нужной эмоции и категории.
+    """
+    sql_query = """
+        select * from state_recommender st
+        where st.emotion = :emotion
+        and st.category = :category
+    """
+    session = async_session()
+    query = await session.execute(sql_query, {"emotion": emotion, "category": category})
+    query = query.fetchall()
+    await session.close()
+    return query

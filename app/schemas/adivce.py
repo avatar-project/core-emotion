@@ -1,18 +1,21 @@
+from optparse import Option
+from typing import Optional
 from pydantic import BaseModel, UUID4
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, date
+
 
 class EmotionType(Enum):
-  NEUTRAL='neutral'
-  JOY='joy'
-  SADNESS='sadness'
-  SURPRISE='surprise'
-  FEAR='fear'
-  ANGER='anger'
+    NEUTRAL = 'neutral'
+    JOY = 'joy'
+    SADNESS = 'sadness'
+    SURPRISE = 'surprise'
+    FEAR = 'fear'
+    ANGER = 'anger'
 
 
 class Advice(BaseModel):
-    advice_id:UUID4
+    advice_id: UUID4
     emotion: EmotionType
     text: str
     is_deprecated: bool
@@ -22,24 +25,36 @@ class Advice(BaseModel):
         orm_mode: True
 
 
-class AdviceData(BaseModel): # не смотрел еще какие там поля извлекаются
-  text: str
-  emotion: str
+class AdviceData(BaseModel):  # не смотрел еще какие там поля извлекаются
+    text: str
+    emotion: str
 
 
 class AdviceBody(BaseModel):
-  advice_type: str = "emotion"
-  data: AdviceData
-  advice_id: UUID4
+    advice_type: str = "emotion"
+    data: AdviceData
+    advice_id: UUID4
 
 
 class AdvicePayload(BaseModel):
-  chat_id: UUID4
-  message_id: int
-  user_id: UUID4
-  advice: AdviceBody
+    chat_id: UUID4
+    message_id: int
+    user_id: UUID4
+    advice: AdviceBody
 
 
 class AdviceResponce(BaseModel):
-  event_type: str = "advice"
-  payload: AdvicePayload
+    event_type: str = "advice"
+    payload: AdvicePayload
+
+
+class UserState(BaseModel):
+    user_id: UUID4
+    date: date
+    state: EmotionType
+    importance: Optional[int]
+    recommender_id: Optional[UUID4]
+
+
+class UserStateAdvanced(UserState):
+    state_id: UUID4
