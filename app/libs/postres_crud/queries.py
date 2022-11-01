@@ -189,8 +189,8 @@ async def update_user_state(user_state: UserStateAdvanced):
         except Exception as e:
             logger.exception(f'UPDATE user state = {e}')
 
-
-async def get_last_user_state(user_id, from_at, to_at) -> List[dict]:
+# TODO нужен именно запрос имеено для последнего еще
+async def get_user_state(user_id, from_at, to_at) -> List[dict]:
     """
     Получить состояние пользователя за последние n дней
     """
@@ -198,6 +198,7 @@ async def get_last_user_state(user_id, from_at, to_at) -> List[dict]:
         select * from user_state ut
         where ut.user_id = :user_id
         and ut.date between :from_at and :to_at
+        order by ut.date
     """
     session = async_session()
     query = await session.execute(sql_query, {"user_id": user_id, "from_at": from_at, "to_at": to_at})

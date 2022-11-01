@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from pydantic import UUID4
 
 from app.libs.psycho_analyze.analyze import (
@@ -7,9 +7,11 @@ from app.libs.psycho_analyze.analyze import (
     get_text_sents,
     message_get_psycho_metrics,
     sents_get_psycho_metrics)
+from app.pg_model.message_advice import UserStateModel
+from app.schemas.adivce import UserState, UserStateAdvanced
 from app.schemas.messages import MessageBase, MessageWithEmotions
-from app.libs.psycho_analyze.daily_analyze import get_date_emotion_count, main_emotion
-from app.libs.postres_crud.queries import write_message_advice
+from app.libs.psycho_analyze.daily_analyze import get_date_emotion_count, main_emotion, recommender_variant
+from app.libs.postres_crud.queries import update_user_state, write_message_advice, write_user_state
 
 
 async def psycho_text_analyze(message: MessageBase):
@@ -66,7 +68,7 @@ async def get_emotion_stat(user_id: UUID4, from_at: datetime, to_at: datetime):
     await emotion_counts
 
 
-async def get_daily_emotion(user_id: UUID4) -> str:
+async def get_daily_emotion(user_id: UUID4, chat_id: UUID4) -> UserState:
     """для какой эмоции давать совет в этот день
 
     Args:
@@ -75,16 +77,29 @@ async def get_daily_emotion(user_id: UUID4) -> str:
     Returns:
         _type_: _description_
     """
-    daily_emotion = await main_emotion()
-    # TODO сохранение ежедневной эмоции в базу
-    return daily_emotion
+    daily_emotion = await main_emotion(user_id)
+
+    user_state = UserState(
+        user_id=user_id,
+        chat_id=chat_id,
+        state=daily_emotion,
+        date=date.today()
+    )
+    await write_user_state(user_state)
+
+    return user_state
 
 
-async def change_daily_emotion(user_id: UUID4, new_emotion: str):
-    # TODO менять ежедневное состояние пользователя в базе
-    ...
+async def change_user_state(user_state: UserStateAdvanced):
+    """Обновляем в базе состояние пользователя в зависимости от его ответов
+
+    Args:
+        user_state (UserStateAdvanced): _description_
+    """
+    await update_user_state(user_state)
 
 
-async def recommender_variant():
+async def get_recommender_variant(user_id: UUID4):
     # TODO посчитать сколько дней подряд эта эмоция, для выбора замера
+    await recommender_variant(user_id)
     ...

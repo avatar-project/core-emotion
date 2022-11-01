@@ -50,6 +50,7 @@ class AdviceResponce(BaseModel):
 
 class UserState(BaseModel):
     user_id: UUID4
+    chat_id: UUID4
     date: date
     state: EmotionType
     importance: Optional[int]

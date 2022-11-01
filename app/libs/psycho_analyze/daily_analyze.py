@@ -2,7 +2,7 @@ from uuid import UUID
 from pydantic import UUID4
 from datetime import datetime, timedelta, timezone, date
 
-from app.libs.postres_crud.queries import get_user_all_emotion_messages
+from app.libs.postres_crud.queries import get_user_all_emotion_messages, get_user_state
 from app.schemas.adivce import EmotionType
 
 
@@ -44,6 +44,26 @@ async def main_emotion(user_id: UUID4):
     max_emotion = max(emotion_counts, key=emotion_counts.get)
 
     return max_emotion
+
+
+async def recommender_variant(user_id: UUID4) -> int:
+    to_at = date.today() + timedelta(days=1)
+    from_at = to_at - timedelta(days=7)
+    user_states = await get_user_state(user_id=user_id, from_at=from_at, to_at=to_at)
+
+    cur_state = user_states[-1]['state']
+    cur_state_count = 1
+    for user_state in range(len(user_states)-2, 0, -1):
+        if user_state['state'] != cur_state:
+            break
+        cur_state_count += 1
+
+    if cur_state_count > 6:
+        return 3
+    elif cur_state_count > 2:
+        return 2
+    else:
+        return 1
 
 
 async def _check_on_message_count(self, emotion_counts: dict) -> bool:
