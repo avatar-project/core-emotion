@@ -101,5 +101,5 @@ async def change_user_state(user_state: UserStateAdvanced):
 
 async def get_recommender_variant(user_id: UUID4):
     # TODO посчитать сколько дней подряд эта эмоция, для выбора замера
-    await recommender_variant(user_id)
+    return await recommender_variant(user_id)
     ...
