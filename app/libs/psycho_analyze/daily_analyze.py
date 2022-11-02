@@ -6,7 +6,7 @@ from app.libs.postres_crud.queries import get_user_all_emotion_messages, get_use
 from app.schemas.adivce import EmotionType
 
 
-async def get_date_emotion_count(user_id: UUID4, from_date: datetime, to_date: datetime):
+async def get_date_emotion_count(user_id: UUID4, from_date: datetime, to_date: datetime) -> dict:
     user_messages = await get_user_all_emotion_messages(user_id=user_id, from_at=from_date, to_at=to_date)
     emotion_counts = {
         'neutral': 0,

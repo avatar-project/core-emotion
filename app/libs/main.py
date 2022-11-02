@@ -48,7 +48,7 @@ async def psycho_text_analyze(message: MessageBase):
     await write_message_advice(message_with_emotion)
 
 
-async def get_emotion_stat(user_id: UUID4, from_at: datetime, to_at: datetime):
+async def get_emotion_stat(user_id: UUID4, from_at: datetime, to_at: datetime) -> dict:
     """Статистика по кол-ву эмоций в сообщениях за определенный промежуток времени
 
     Args:
@@ -57,7 +57,7 @@ async def get_emotion_stat(user_id: UUID4, from_at: datetime, to_at: datetime):
         to_at (datetime): _description_
 
     Returns:
-        _type_: _description_
+        dict: словарь {Эмоция: количество}
     """
 
     emotion_counts = await get_date_emotion_count(user_id, from_at, to_at)
@@ -68,7 +68,7 @@ async def get_emotion_stat(user_id: UUID4, from_at: datetime, to_at: datetime):
     await emotion_counts
 
 
-async def get_daily_emotion(user_id: UUID4, chat_id: UUID4) -> UserState:
+async def get_daily_emotion(user_id: UUID4, chat_id: UUID4) -> UserStateAdvanced:
     """для какой эмоции давать совет в этот день
 
     Args:
@@ -85,9 +85,14 @@ async def get_daily_emotion(user_id: UUID4, chat_id: UUID4) -> UserState:
         state=daily_emotion,
         date=date.today()
     )
-    await write_user_state(user_state)
+    
+    state_id = await write_user_state(user_state)
+    user_state_advanced = UserStateAdvanced(
+        **user_state,
+        state_id=state_id
+    )
 
-    return user_state
+    return user_state_advanced
 
 
 async def change_user_state(user_state: UserStateAdvanced):
