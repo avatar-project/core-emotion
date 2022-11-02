@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pydantic import UUID4
 
 from app.libs.psycho_analyze.analyze import (
@@ -11,7 +11,7 @@ from app.pg_model.message_advice import UserStateModel
 from app.schemas.adivce import UserState, UserStateAdvanced
 from app.schemas.messages import MessageBase, MessageWithEmotions
 from app.libs.psycho_analyze.daily_analyze import get_date_emotion_count, main_emotion, recommender_variant
-from app.libs.postres_crud.queries import update_user_state, write_message_advice, write_user_state
+from app.libs.postres_crud.queries import get_user_state, update_user_state, write_message_advice, write_user_state
 
 
 async def psycho_text_analyze(message: MessageBase):
@@ -32,7 +32,7 @@ async def psycho_text_analyze(message: MessageBase):
     # print("###"*30)
     # готовим данные к возврату
     message_with_emotion = []
-    # print(advices)
+
     for advice in advices:
         message_with_emotion.append(
             MessageWithEmotions(
@@ -44,7 +44,7 @@ async def psycho_text_analyze(message: MessageBase):
             )
         )
     # Запись в базу
-    # print(message_with_emotion)
+
     await write_message_advice(message_with_emotion)
 
 
@@ -99,7 +99,29 @@ async def change_user_state(user_state: UserStateAdvanced):
     await update_user_state(user_state)
 
 
-async def get_recommender_variant(user_id: UUID4):
-    # TODO посчитать сколько дней подряд эта эмоция, для выбора замера
+async def get_recommender_variant(user_id: UUID4) -> int:
+    """Сколько дней подряд последнее (текущее) состояние пользователя идет
+
+    Args:
+        user_id (UUID4): _description_
+
+    Returns:
+        int: дней подряд
+    """
     return await recommender_variant(user_id)
-    ...
+
+
+async def get_last_state(user_id: UUID4) -> UserStateAdvanced:
+    """Получить сегодняшнее состояние пользователя
+
+    Args:
+        user_id (UUID4): _description_
+
+    Returns:
+        UserStateAdvanced: _description_
+    """
+    user_state = await get_user_state(user_id, date.today(), date.today() + timedelta(days=1))
+    if user_state:
+        return UserState(**user_state[0])
+    else:
+        return None

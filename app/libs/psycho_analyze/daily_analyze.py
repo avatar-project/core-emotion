@@ -58,12 +58,14 @@ async def recommender_variant(user_id: UUID4) -> int:
             break
         cur_state_count += 1
 
-    if cur_state_count > 6:
-        return 3
-    elif cur_state_count > 2:
-        return 2
-    else:
-        return 1
+    return cur_state_count
+
+    # if cur_state_count > 6:
+    #     return 3
+    # elif cur_state_count > 2:
+    #     return 2
+    # else:
+    #     return 1
 
 
 async def _check_on_message_count(self, emotion_counts: dict) -> bool:
