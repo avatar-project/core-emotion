@@ -59,3 +59,10 @@ class UserState(BaseModel):
 
 class UserStateAdvanced(UserState):
     state_id: UUID4
+
+
+class StateRecommender(BaseModel):
+    recommender_id: UUID4
+    text: str
+    emotion: EmotionType
+    state_category: int

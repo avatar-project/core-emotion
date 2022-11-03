@@ -1,12 +1,12 @@
 from datetime import datetime
 from fastapi import APIRouter
 from app.libs.emotion.emotion_detect import Emotion
-from app.libs.main import change_user_state, get_daily_emotion, get_emotion_stat, get_today_state, get_recommender_variant, psycho_text_analyze
+from app.libs.main import change_user_state, get_daily_emotion, get_emotion_stat, get_text_recommender, get_today_state, get_recommender_variant, psycho_text_analyze
 from pydantic import UUID4
 
 from app.libs.toxic.toxic_detect import text2toxicity
 from app.libs.toxic.mat_filter import count_mat_detect
-from app.schemas.adivce import UserState, UserStateAdvanced
+from app.schemas.adivce import EmotionType, StateRecommender, UserState, UserStateAdvanced
 from app.schemas.messages import MessageBase
 
 emotion_router = APIRouter()
@@ -129,3 +129,13 @@ async def recommender_variant(user_id: UUID4):
 )
 async def today_state(user_id: UUID4):
     return await get_today_state(user_id)
+
+
+@emotion_router.get(
+    path='/get_text_recommender',
+    summary='Получить совет на основе эмоции и категории (насколько сильно проявляется эмоция)',
+    response_model=StateRecommender,
+    response_description='Рекомендация из базы'
+)
+async def text_recommender(user_id: UUID4, emotion: EmotionType, state_category: int):
+    return await get_text_recommender(user_id=user_id, emotion=emotion, state_category=state_category)

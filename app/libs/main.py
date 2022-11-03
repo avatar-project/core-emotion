@@ -8,9 +8,9 @@ from app.libs.psycho_analyze.analyze import (
     message_get_psycho_metrics,
     sents_get_psycho_metrics)
 from app.pg_model.message_advice import UserStateModel
-from app.schemas.adivce import UserState, UserStateAdvanced
+from app.schemas.adivce import EmotionType, StateRecommender, UserState, UserStateAdvanced
 from app.schemas.messages import MessageBase, MessageWithEmotions
-from app.libs.psycho_analyze.daily_analyze import get_date_emotion_count, main_emotion, recommender_variant
+from app.libs.psycho_analyze.daily_analyze import choice_text_recommendation, get_date_emotion_count, main_emotion, recommender_variant
 from app.libs.postres_crud.queries import get_user_state, update_user_state, write_message_advice, write_user_state
 
 
@@ -128,6 +128,21 @@ async def get_today_state(user_id: UUID4) -> UserStateAdvanced:
     """
     user_state = await get_user_state(user_id, date.today(), date.today())
     if user_state:
-        return UserStateAdvanced(**user_state)
+        return UserStateAdvanced(**user_state[0])
     else:
         return None
+
+
+async def get_text_recommender(user_id: UUID4, emotion: EmotionType, state_category: int) -> StateRecommender:
+    """Получить совет на основе эмоции и категории (насколько сильно проявляется эмоция)    
+
+    Args:
+        user_id (UUID4): _description_
+        emotion (EmotionType): _description_
+        state_category (int): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    recommendation = await choice_text_recommendation(user_id=user_id, emotion=emotion, state_category=state_category)
+    return recommendation

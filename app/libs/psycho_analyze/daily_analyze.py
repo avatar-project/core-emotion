@@ -1,9 +1,10 @@
+import random
 from uuid import UUID
 from pydantic import UUID4
 from datetime import datetime, timedelta, timezone, date
 
-from app.libs.postres_crud.queries import get_user_all_emotion_messages, get_user_state
-from app.schemas.adivce import EmotionType
+from app.libs.postres_crud.queries import get_daily_state_recommender, get_user_all_emotion_messages, get_user_state
+from app.schemas.adivce import EmotionType, StateRecommender
 
 
 async def get_date_emotion_count(user_id: UUID4, from_date: datetime, to_date: datetime) -> dict:
@@ -55,6 +56,7 @@ async def recommender_variant(user_id: UUID4) -> int:
     cur_state = user_states[0]['state']
     cur_state_count = 1
     for i in range(1, len(user_states)):
+        # TODO надо проверять, что не было ли перерыва, то есть 31 потом 02 сразу?
         if user_states[i]['state'] != cur_state:
             break
         cur_state_count += 1
@@ -82,9 +84,24 @@ async def _check_on_message_count(emotion_counts: dict) -> bool:
     return True
 
 
-async def get_daily_recomandation(user_id: UUID4, from_date: datetime, to_date: datetime):
-    ...
+async def choice_text_recommendation(user_id: UUID4, emotion: EmotionType, state_category: int) -> StateRecommender:
+    if state_category > 3:
+        state_category = 3
+    elif state_category < 1:
+        state_category = 1
 
+    state_recommendations = await get_daily_state_recommender(emotion.value, state_category)
 
-async def get_text_recomandation():
-    ...
+    # TODO проверять чтобы не было повторных советов подряд
+    # to_at = date.today() + timedelta(days=1)
+    # from_at = to_at - timedelta(days=7)
+    # past_recommendations = await get_date_emotion_count(user_id, from_at, to_at)
+
+    # for recommender in past_recommendations:
+    #     if recommender['recommender_id']:
+    #         if recommender['recommender_id'] in state_recommendations
+
+    recommendation = random.choice(state_recommendations)
+    recommendation = StateRecommender(**recommendation)
+
+    return recommendation

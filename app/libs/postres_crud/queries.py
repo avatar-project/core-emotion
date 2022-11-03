@@ -190,7 +190,7 @@ async def update_user_state(user_state: UserStateAdvanced):
         except Exception as e:
             logger.exception(f'UPDATE user state = {e}')
 
-# TODO нужен именно запрос имеено для последнего еще
+
 async def get_user_state(user_id, from_at, to_at) -> List[dict]:
     """
     Получить состояние пользователя за последние n дней
@@ -200,13 +200,13 @@ async def get_user_state(user_id, from_at, to_at) -> List[dict]:
         where ut.user_id = :user_id
         and ut.date between :from_at and :to_at
         order by ut.date desc
-        limit 1
     """
     session = async_session()
     query = await session.execute(sql_query, {"user_id": user_id, "from_at": from_at, "to_at": to_at})
-    query = query.one_or_none()
+    query = query.fetchall()
     await session.close()
     return query
+
 
 async def get_user_last_state(user_id) -> dict:
     """
@@ -249,7 +249,7 @@ async def get_daily_state_recommender(emotion, category) -> List[dict]:
     sql_query = """
         select st.* from state_recommender st
         where st.emotion = :emotion
-        and st.category = :category
+        and st.state_category = :category
     """
     session = async_session()
     query = await session.execute(sql_query, {"emotion": emotion, "category": category})
