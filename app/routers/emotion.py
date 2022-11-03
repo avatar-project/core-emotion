@@ -104,7 +104,7 @@ async def daily_emotion(user_id: UUID4, chat_id: UUID4):
 
 
 @emotion_router.post(
-    path='change_user_state',
+    path='/change_user_state',
     summary='обновить инфу о состояние пользователя в базе'
 )
 async def change_user_state_p(user_state: UserStateAdvanced):

@@ -52,10 +52,10 @@ async def recommender_variant(user_id: UUID4) -> int:
     from_at = to_at - timedelta(days=7)
     user_states = await get_user_state(user_id=user_id, from_at=from_at, to_at=to_at)
 
-    cur_state = user_states[-1]['state']
+    cur_state = user_states[0]['state']
     cur_state_count = 1
-    for user_state in range(len(user_states)-2, 0, -1):
-        if user_state['state'] != cur_state:
+    for i in range(1, len(user_states)):
+        if user_states[i]['state'] != cur_state:
             break
         cur_state_count += 1
 

@@ -200,10 +200,11 @@ async def get_user_state(user_id, from_at, to_at) -> List[dict]:
         where ut.user_id = :user_id
         and ut.date between :from_at and :to_at
         order by ut.date desc
+        limit 1
     """
     session = async_session()
     query = await session.execute(sql_query, {"user_id": user_id, "from_at": from_at, "to_at": to_at})
-    query = query.fetchall()
+    query = query.one_or_none()
     await session.close()
     return query
 

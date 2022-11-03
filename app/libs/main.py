@@ -126,8 +126,8 @@ async def get_last_state(user_id: UUID4) -> UserStateAdvanced:
     Returns:
         UserStateAdvanced: _description_
     """
-    user_state = await get_user_state(user_id, date.today(), date.today() + timedelta(days=1))
+    user_state = await get_user_state(user_id, date.today(), date.today())
     if user_state:
-        return UserState(**user_state[0])
+        return UserStateAdvanced(**user_state)
     else:
         return None
