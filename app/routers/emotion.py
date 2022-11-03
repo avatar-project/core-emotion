@@ -1,7 +1,7 @@
 from datetime import datetime
 from fastapi import APIRouter
 from app.libs.emotion.emotion_detect import Emotion
-from app.libs.main import change_user_state, get_daily_emotion, get_emotion_stat, get_last_state, get_recommender_variant, psycho_text_analyze
+from app.libs.main import change_user_state, get_daily_emotion, get_emotion_stat, get_today_state, get_recommender_variant, psycho_text_analyze
 from pydantic import UUID4
 
 from app.libs.toxic.toxic_detect import text2toxicity
@@ -122,10 +122,10 @@ async def recommender_variant(user_id: UUID4):
 
 
 @emotion_router.get(
-    path='/get_last_state',
+    path='/get_today_state',
     summary='Получить сегодняшнее состояние пользователя из БД',
     response_model=UserStateAdvanced,
     response_description='Схема с данными о состояние юзера'
 )
-async def last_state(user_id: UUID4):
-    return await get_last_state(user_id)
+async def today_state(user_id: UUID4):
+    return await get_today_state(user_id)

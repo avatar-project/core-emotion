@@ -90,7 +90,7 @@ async def get_daily_emotion(user_id: UUID4, chat_id: UUID4) -> UserStateAdvanced
 
     user_state_advanced = UserStateAdvanced(
         **user_state.dict(),
-        state_id = state_id
+        state_id=state_id
     )
 
     return user_state_advanced
@@ -117,7 +117,7 @@ async def get_recommender_variant(user_id: UUID4) -> int:
     return await recommender_variant(user_id)
 
 
-async def get_last_state(user_id: UUID4) -> UserStateAdvanced:
+async def get_today_state(user_id: UUID4) -> UserStateAdvanced:
     """Получить сегодняшнее состояние пользователя
 
     Args:
