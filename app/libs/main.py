@@ -65,7 +65,7 @@ async def get_emotion_stat(user_id: UUID4, from_at: datetime, to_at: datetime) -
     if not emotion_counts:
         return None
 
-    await emotion_counts
+    return emotion_counts
 
 
 async def get_daily_emotion(user_id: UUID4, chat_id: UUID4) -> UserStateAdvanced:
@@ -85,11 +85,12 @@ async def get_daily_emotion(user_id: UUID4, chat_id: UUID4) -> UserStateAdvanced
         state=daily_emotion,
         date=date.today()
     )
-    
+
     state_id = await write_user_state(user_state)
+
     user_state_advanced = UserStateAdvanced(
-        **user_state,
-        state_id=state_id
+        **user_state.dict(),
+        state_id = state_id
     )
 
     return user_state_advanced

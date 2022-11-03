@@ -24,7 +24,8 @@ async def get_date_emotion_count(user_id: UUID4, from_date: datetime, to_date: d
 
 
 async def _get_datetime_drom_date(udate):
-    return datetime(udate.year, udate.month, udate.day, tzinfo=timezone.utc)
+    return datetime(udate.year, udate.month, udate.day)
+    # return datetime(udate.year, udate.month, udate.day, tzinfo=timezone.utc)
 
 
 async def main_emotion(user_id: UUID4):
@@ -68,7 +69,7 @@ async def recommender_variant(user_id: UUID4) -> int:
     #     return 1
 
 
-async def _check_on_message_count(self, emotion_counts: dict) -> bool:
+async def _check_on_message_count(emotion_counts: dict) -> bool:
     MIN_MESSAGE_COUNT = 5
     message_count = 0
 

@@ -3,7 +3,8 @@ from sqlalchemy import (
     Integer,
     String,
     Boolean,
-    Date
+    Date,
+    text
 )
 from sqlalchemy.dialects.postgresql import UUID, ENUM
 from sqlalchemy.ext.declarative import declarative_base
@@ -31,9 +32,10 @@ class Advice(Model):
 
 class UserStateModel(Model):
     __tablename__ = "user_state"
-    state_id = Column(UUID(as_uuid=True), nullable=False, primary_key=True)
+    state_id = Column(UUID(as_uuid=True), nullable=False, primary_key=True, server_default=text("gen_random_uuid()"))
     user_id = Column(UUID(as_uuid=True), nullable=False)
+    chat_id = Column(UUID(as_uuid=True), nullable=False)
     date = Column(Date, nullable=False)
     state = Column(ENUM('neutral','joy','sadness','surprise','fear','anger', name="EMOTION_TYPE"), nullable=False)
-    importance = Column(ENUM(1, 2, 3, 4, 5, name="IMPORTANCE"))
+    importance = Column(Integer)
     recommender_id = Column(UUID(as_uuid=True))

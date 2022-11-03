@@ -89,7 +89,8 @@ async def get_user_all_emotion_messages(user_id, from_at, to_at) -> List[dict]:
     sql_query = """
         select ma.user_id, ms.chat_id, ms.created_at, ma.emotion, ma.advice_id  from message_advice ma
         join messages ms on ma.message_id = ms.message_id
-        where ma.user_id = :user_id
+        where ms.user_id = :user_id
+        and ma.user_id = :user_id
         and ms.created_at between :from_at and :to_at
     """
     session = async_session()

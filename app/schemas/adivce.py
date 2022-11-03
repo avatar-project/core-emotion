@@ -52,9 +52,9 @@ class UserState(BaseModel):
     user_id: UUID4
     chat_id: UUID4
     date: date
-    state: EmotionType
+    state: str
     importance: Optional[int]
-    recommender_id: Optional[UUID4]
+    recommender_id: Optional[int]
 
 
 class UserStateAdvanced(UserState):
