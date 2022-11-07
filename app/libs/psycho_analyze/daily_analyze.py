@@ -40,8 +40,8 @@ async def main_emotion(user_id: UUID4):
     emotion_counts.pop('neutral', None)
     emotion_counts.pop('surprise', None)
 
-    if not _check_on_message_count(emotion_counts):
-        return EmotionType.NEUTRAL
+    if not await _check_on_message_count(emotion_counts):
+        return EmotionType.NEUTRAL.value
 
     max_emotion = max(emotion_counts, key=emotion_counts.get)
 
