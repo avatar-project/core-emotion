@@ -49,6 +49,7 @@ def create_app() -> Union[FastAPI, SentryAsgiMiddleware]:
         PostgreSQLWrapper,
         RabbitMQWrapper,
     )
+    RabbitMQWrapper().startup_event_handler()
     pw = PostgreSQLWrapper()
     pw.notify_manager.include_listener(pl)
     asyncio.create_task(rmq.startup_event_handler())
