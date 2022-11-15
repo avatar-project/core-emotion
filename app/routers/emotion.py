@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
 from fastapi import APIRouter
 from app.libs.emotion.emotion_detect import Emotion
-from app.libs.main import change_user_state, get_daily_emotion, get_emotion_stat, get_text_recommender, get_today_state, get_recommender_variant, psycho_text_analyze
+from app.libs.main import change_user_state, get_daily_emotion, get_daily_emotion_stat, get_emotion_stat, get_text_recommender, get_today_state, get_recommender_variant, psycho_text_analyze
 from pydantic import UUID4
 
 from app.libs.toxic.toxic_detect import text2toxicity
@@ -91,6 +91,16 @@ async def test(message: MessageBase):
 )
 async def emotion_stat(user_id: UUID4, from_at: datetime, to_at: datetime):
     return await get_emotion_stat(user_id, from_at, to_at)
+
+
+@emotion_router.get(
+    path='/get_daily_emotion_stat',
+    summary="Получить ежедневные эмоции пользователя за определенный период",
+    response_model=list,
+    response_description="list: Схем с данными о состояние юзера"
+)
+async def daily_emotion_stat(user_id: UUID4, from_at: date, to_at: date):
+    return await get_daily_emotion_stat(user_id, from_at, to_at)
 
 
 @emotion_router.get(

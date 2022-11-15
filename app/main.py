@@ -52,7 +52,16 @@ def create_app() -> Union[FastAPI, SentryAsgiMiddleware]:
     RabbitMQWrapper().startup_event_handler()
     pw = PostgreSQLWrapper()
     pw.notify_manager.include_listener(pl)
-    asyncio.create_task(rmq.startup_event_handler())
+
+    @service.app.on_event("startup")
+    async def listen_created_queue():
+        """Запускает фоновое прослушивание создания очередей"""
+        await RabbitMQWrapper().startup_event_handler()
+
+
+    @service.app.on_event("shutdown")
+    async def shutdown_event():
+        await RabbitMQWrapper().shutdown_event_handler()
 
     service.app.include_router(router=emotion_router, prefix="/emotion")
 

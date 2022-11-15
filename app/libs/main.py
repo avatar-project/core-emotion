@@ -48,6 +48,24 @@ async def psycho_text_analyze(message: MessageBase):
     await write_message_advice(message_with_emotion)
 
 
+async def get_daily_emotion_stat(user_id: UUID4, from_at: date, to_at: date) -> list:
+    """Получить ежедневные эмоции пользователя за определенный период
+
+    Args:
+        user_id (UUID4): _description_
+        from_at (date): с какой даты
+        to_at (date): по какую
+
+    Returns:
+        list: _description_
+    """
+    user_states = []
+    user_states_dict = await get_user_state(user_id, from_at, to_at)
+    for user_state in user_states_dict:
+        user_states.append(UserStateAdvanced(**user_state))
+    return user_states
+
+
 async def get_emotion_stat(user_id: UUID4, from_at: datetime, to_at: datetime) -> dict:
     """Статистика по кол-ву эмоций в сообщениях за определенный промежуток времени
 

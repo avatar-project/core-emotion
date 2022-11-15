@@ -1,10 +1,12 @@
-from platform_services.rabbitmq import RabbitMQWrapper
-from aio_pika import Message, DeliveryMode
-from app.schemas.adivce import AdviceResponce, AdvicePayload, Advice, AdviceBody, AdviceData
-from app.schemas.messages import MessageWithEmotions, MessageWithAdvice, AdvicePayloadNew, AdviceResponceNew
-from typing import List
 import asyncio
 import logging
+from typing import List
+
+from aio_pika import DeliveryMode, Message
+from platform_services.rabbitmq import RabbitMQWrapper
+
+from app.schemas.adivce import Advice, AdviceBody, AdviceData, AdvicePayload, AdviceResponce
+from app.schemas.messages import AdvicePayloadNew, AdviceResponceNew, MessageWithAdvice, MessageWithEmotions
 
 rmq = RabbitMQWrapper()
 logger = logging.getLogger("rmq.user")
