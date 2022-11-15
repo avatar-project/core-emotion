@@ -1,5 +1,4 @@
-FROM python:3.9-alpine as build-image
-RUN apk add build-base
+FROM python:3.9 as build-image
 ARG PIP_EXTRA_INDEX_URL
 WORKDIR /service
 RUN python -m venv /opt/venv
@@ -9,8 +8,8 @@ COPY ./requirements.txt .
 RUN pip install --no-cache-dir --disable-pip-version-check --requirement requirements.txt --trusted-host 5.53.125.17
 
 
-FROM python:3.9-alpine as runtime-image
-RUN adduser -D service
+FROM python:3.9 as runtime-image
+RUN adduser service
 USER service
 COPY --chown=service:service --from=build-image /opt/venv /opt/venv
 COPY --chown=service:service . /service

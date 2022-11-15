@@ -1,0 +1,32 @@
+image: docker:20.10.16
+
+stages:
+  - build
+
+before_script:
+  - >
+    docker login $CI_REGISTRY 
+    -u $CI_REGISTRY_USER 
+    -p $CI_REGISTRY_PASSWORD
+
+Build:
+  stage: build
+  only:
+    - tags
+  variables:
+    LATEST_IMAGE: "$CI_REGISTRY_IMAGE:latest"
+    IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
+  script:
+    - docker pull $LATEST_IMAGE || true
+    - >
+      docker build
+      --pull
+      --cache-from "$LATEST_IMAGE"
+      --tag "$IMAGE"
+      --build-arg AVATAR_TITLE="$CI_PROJECT_TITLE"
+      --build-arg AVATAR_VERSION="$CI_COMMIT_TAG"
+      --build-arg PIP_EXTRA_INDEX_URL=https://__token__:DqEGG7Csz_NUjxsQAh4K@gitlab.actcognitive.org/api/v4/projects/15/packages/pypi/simple
+      .
+    - docker push $IMAGE
+    - docker tag $IMAGE $LATEST_IMAGE
+    - docker push $LATEST_IMAGE
