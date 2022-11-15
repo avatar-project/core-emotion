@@ -5,7 +5,10 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 # COPY requirements requirements/
 COPY ./requirements.txt .
-RUN pip install --no-cache-dir --disable-pip-version-check --requirement requirements.txt --trusted-host 5.53.125.17
+COPY ./require_install.sh .
+RUN python -m pip install --upgrade pip
+RUN sh require_install.sh
+# RUN pip install --no-cache-dir --disable-pip-version-check --requirement requirements.txt
 
 
 FROM python:3.9 as runtime-image

@@ -1,9 +1,12 @@
+from datetime import date, datetime
 from fastapi import APIRouter
 from app.libs.emotion.emotion_detect import Emotion
-from app.libs.main import psycho_text_analyze
+from app.libs.main import change_user_state, get_daily_emotion, get_daily_emotion_stat, get_emotion_stat, get_text_recommender, get_today_state, get_recommender_variant, psycho_text_analyze
+from pydantic import UUID4
 
 from app.libs.toxic.toxic_detect import text2toxicity
 from app.libs.toxic.mat_filter import count_mat_detect
+from app.schemas.adivce import EmotionType, StateRecommender, UserState, UserStateAdvanced
 from app.schemas.messages import MessageBase
 
 emotion_router = APIRouter()
@@ -78,3 +81,71 @@ async def emotion(text: str):
 )
 async def test(message: MessageBase):
     return await psycho_text_analyze(message)
+
+
+@emotion_router.get(
+    path='/get_emotion_stat',
+    summary="Статистика по кол-ву эмоций в сообщениях за определенный промежуток времени",
+    response_model=dict,
+    response_description="dict: словарь {Эмоция: количество}"
+)
+async def emotion_stat(user_id: UUID4, from_at: datetime, to_at: datetime):
+    return await get_emotion_stat(user_id, from_at, to_at)
+
+
+@emotion_router.get(
+    path='/get_daily_emotion_stat',
+    summary="Получить ежедневные эмоции пользователя за определенный период",
+    response_model=list,
+    response_description="list: Схем с данными о состояние юзера"
+)
+async def daily_emotion_stat(user_id: UUID4, from_at: date, to_at: date):
+    return await get_daily_emotion_stat(user_id, from_at, to_at)
+
+
+@emotion_router.get(
+    path='/get_daily_emotion',
+    summary='Доминируящая за день эмоция',
+    response_model=UserStateAdvanced,
+    response_description='Схема с данными о состояние юзера'
+)
+async def daily_emotion(user_id: UUID4, chat_id: UUID4):
+    return await get_daily_emotion(user_id, chat_id)
+
+
+@emotion_router.post(
+    path='/change_user_state',
+    summary='обновить инфу о состояние пользователя в базе'
+)
+async def change_user_state_p(user_state: UserStateAdvanced):
+    await change_user_state(user_state)
+
+
+@emotion_router.get(
+    path='/get_recommender_variant',
+    summary='получить кол-во дней с текущей (сегодняшней) эмоции',
+    response_model=int,
+    response_description='количество дней'
+)
+async def recommender_variant(user_id: UUID4):
+    return await get_recommender_variant(user_id)
+
+
+@emotion_router.get(
+    path='/get_today_state',
+    summary='Получить сегодняшнее состояние пользователя из БД',
+    response_model=UserStateAdvanced,
+    response_description='Схема с данными о состояние юзера'
+)
+async def today_state(user_id: UUID4):
+    return await get_today_state(user_id)
+
+
+@emotion_router.get(
+    path='/get_text_recommender',
+    summary='Получить совет на основе эмоции и категории (насколько сильно проявляется эмоция)',
+    response_model=StateRecommender,
+    response_description='Рекомендация из базы'
+)
+async def text_recommender(user_id: UUID4, emotion: EmotionType, state_category: int):
+    return await get_text_recommender(user_id=user_id, emotion=emotion, state_category=state_category)
