@@ -3,10 +3,7 @@ from logging import DEBUG, INFO, WARNING, basicConfig, getLogger
 from typing import Union
 
 from fastapi import FastAPI
-from platform_services.keycloak import KeycloakWrapper
-from platform_services.mongodb import MongoDBWrapper
 from platform_services.rabbitmq import RabbitMQWrapper
-from platform_services.redis import RedisWrapper
 from platform_services.sentry import SentryWrapper
 from platform_services.service import PlatformService, get_general_settings
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
@@ -46,9 +43,6 @@ def create_app() -> Union[FastAPI, SentryAsgiMiddleware]:
 
     service = PlatformService(
         SentryWrapper,
-        RedisWrapper,
-        MongoDBWrapper,
-        KeycloakWrapper,
         RabbitMQWrapper,
     )
 
