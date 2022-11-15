@@ -3,9 +3,8 @@ from logging import DEBUG, INFO, WARNING, basicConfig, getLogger
 from typing import Union
 
 from fastapi import FastAPI
-
 from platform_services.rabbitmq import RabbitMQWrapper
-from platform_services.postgresql import PostgreSQLWrapper
+from platform_services.sentry import SentryWrapper
 from platform_services.service import PlatformService, get_general_settings
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from app.libs.listener import pl
