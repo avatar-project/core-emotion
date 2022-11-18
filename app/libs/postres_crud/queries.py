@@ -30,11 +30,10 @@ async def get_user_emotion_a_message(chat_id, user_id, from_at, to_at) -> List[d
     """
 
     sql_quary = """
-    select ad.advice_id, ad.emotion, ms.message_id, ms.user_id  from messages ms
-        join message_advice ad on ms.message_id = ad.message_id
-        left join advice adv on adv.advice_id = ad.advice_id
-        where ad.chat_id = :chat_id
-        and ad.user_id = :user_id
+    select ms.message_id, ms.user_id, ad.advice_id, ad.emotion from messages ms
+        join message_advice ad on ms.message_id = ad.message_id and ms.user_id = ad.user_id
+        where ms.chat_id = :chat_id
+        and ms.user_id = :user_id
         and ms.created_at between :from_at
         and :to_at"""
     session = async_session()

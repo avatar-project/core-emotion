@@ -120,7 +120,7 @@ async def get_advice(message: MessageBase, message_emotion: EmotionType) -> List
 
     user_emotions = {}
     last_advice_message = None
-    # print(f'user_message {user_messages}')
+
     # Смотрим, был ли совет за последний час, если по такой же эмоции был, то возвращаем дефолт
     for user_message in user_messages:
 
@@ -133,20 +133,21 @@ async def get_advice(message: MessageBase, message_emotion: EmotionType) -> List
             user_emotions[user_message['emotion'].lower()] += 1
         else:
             user_emotions[user_message['emotion'].lower()] = 1
-
+    # print(f'1 user_emotions {user_emotions}')
     # Далее даем совет если текущая эмоция трижды встречалась за последний час или текущая эмоция встречалась больше раз, чем та, для которой дали уже совет
     current_emotion_count = user_emotions.get(message_emotion.name.lower(), 0)
-
+    # print(f'2 current_emotion_count {current_emotion_count}')
     if last_advice_message:
         # print(f'last_advice_message: {current_emotion_count}')
         last_advice_emotion_count = user_emotions.get(last_advice_message['emotion'].lower(), 0)
-        # print(last_advice_emotion_count)
-        if current_emotion_count > EMOTION_COUNT and current_emotion_count >= last_advice_emotion_count:
+        # print(f'3 last_advice_emotion_count - {last_advice_emotion_count}')
+        if current_emotion_count >= EMOTION_COUNT and current_emotion_count >= last_advice_emotion_count:
             return await get_current_advice(message, message_emotion, users)
         else:
             return advices_to_user
     else:
-        if current_emotion_count > EMOTION_COUNT:
+        # print(f'4 current_emotion_count {current_emotion_count}')
+        if current_emotion_count >= EMOTION_COUNT:
             return await get_current_advice(message, message_emotion, users)
         else:
             return advices_to_user
