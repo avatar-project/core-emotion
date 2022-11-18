@@ -54,7 +54,7 @@ class UserState(BaseModel):
     date: date
     state: str
     importance: Optional[int]
-    recommender_id: Optional[int]
+    recommender_id: Optional[UUID4]
 
 
 class UserStateAdvanced(UserState):

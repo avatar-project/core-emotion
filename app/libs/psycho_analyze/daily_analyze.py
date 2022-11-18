@@ -100,7 +100,7 @@ async def choice_text_recommendation(user_id: UUID4, emotion: EmotionType, state
     # for recommender in past_recommendations:
     #     if recommender['recommender_id']:
     #         if recommender['recommender_id'] in state_recommendations
-
+    print(state_recommendations)
     recommendation = random.choice(state_recommendations)
     recommendation = StateRecommender(**recommendation)
 
