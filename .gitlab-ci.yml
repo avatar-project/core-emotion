@@ -15,7 +15,7 @@ build:
   variables:
     LATEST_IMAGE: "$CI_REGISTRY_IMAGE:latest"
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "main"'
+    - if: '$CI_COMMIT_REF_NAME == "master"'
       when: always
     - if: '$CI_COMMIT_TAG != null'
       variables:
@@ -25,11 +25,11 @@ build:
     - >
       docker build
       --pull
-      --cache-from $LATEST_IMAGE
       --tag $LATEST_IMAGE
       --build-arg AVATAR_TITLE=$CI_PROJECT_TITLE
-      --build-arg AVATAR_VERSION=$CI_COMMIT_TAG
-      --build-arg PIP_EXTRA_INDEX_URL=https://__token__:DqEGG7Csz_NUjxsQAh4K@gitlab.actcognitive.org/api/v4/projects/15/packages/pypi/simple
+      --build-arg AVATAR_VERSION=${CI_COMMIT_TAG:-0.0.1}
+      --build-arg PLATFORM_PIP_EXTRA_INDEX_URL=https://__token__:DqEGG7Csz_NUjxsQAh4K@gitlab.actcognitive.org/api/v4/projects/15/packages/pypi/simple
+      --build-arg CORE_PIP_EXTRA_INDEX_URL=https://__token__:PkRC6rSxyC31oYfvpXb9@gitlab.actcognitive.org/api/v4/projects/22/packages/pypi/simple
       .
     - docker push $LATEST_IMAGE
     - (if [ -v IMAGE ]; then docker tag $LATEST_IMAGE $IMAGE; docker push $IMAGE; fi)
@@ -37,8 +37,8 @@ build:
 deploy:
   stage: deploy
   rules:
-    - if: $CI_COMMIT_REF_NAME == "main"
-      when: always
+    - if: $CI_COMMIT_REF_NAME == "master"
+      when: on_success
   needs:
     - build
   trigger: avatar/deployment_dev
