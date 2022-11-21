@@ -15,7 +15,7 @@ build:
   variables:
     LATEST_IMAGE: "$CI_REGISTRY_IMAGE:latest"
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "master"'
+    - if: '$CI_COMMIT_REF_NAME == "main"'
       when: always
     - if: '$CI_COMMIT_TAG != null'
       variables:
@@ -37,7 +37,7 @@ build:
 deploy:
   stage: deploy
   rules:
-    - if: $CI_COMMIT_REF_NAME == "master"
+    - if: $CI_COMMIT_REF_NAME == "main"
       when: on_success
   needs:
     - build
