@@ -72,7 +72,7 @@ async def recommender_variant(user_id: UUID4) -> int:
 
 
 async def _check_on_message_count(emotion_counts: dict) -> bool:
-    MIN_MESSAGE_COUNT = 5
+    MIN_MESSAGE_COUNT = 3
     message_count = 0
 
     for k, v in emotion_counts.items():
