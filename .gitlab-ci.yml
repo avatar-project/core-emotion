@@ -2,6 +2,7 @@ image: docker:20.10.16
 
 stages:
   - build
+  - deploy
 
 before_script:
   - >
@@ -9,24 +10,35 @@ before_script:
     -u $CI_REGISTRY_USER 
     -p $CI_REGISTRY_PASSWORD
 
-Build:
+build:
   stage: build
-  only:
-    - tags
   variables:
     LATEST_IMAGE: "$CI_REGISTRY_IMAGE:latest"
-    IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "main"'
+      when: always
+    - if: '$CI_COMMIT_TAG != null'
+      variables:
+        IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
   script:
     - docker pull $LATEST_IMAGE || true
     - >
       docker build
       --pull
-      --cache-from "$LATEST_IMAGE"
-      --tag "$IMAGE"
-      --build-arg AVATAR_TITLE="$CI_PROJECT_TITLE"
-      --build-arg AVATAR_VERSION="$CI_COMMIT_TAG"
-      --build-arg PIP_EXTRA_INDEX_URL=https://__token__:DqEGG7Csz_NUjxsQAh4K@gitlab.actcognitive.org/api/v4/projects/15/packages/pypi/simple
+      --tag $LATEST_IMAGE
+      --build-arg AVATAR_TITLE=$CI_PROJECT_TITLE
+      --build-arg AVATAR_VERSION=${CI_COMMIT_TAG:-0.0.1}
+      --build-arg PLATFORM_PIP_EXTRA_INDEX_URL=https://__token__:DqEGG7Csz_NUjxsQAh4K@gitlab.actcognitive.org/api/v4/projects/15/packages/pypi/simple
+      --build-arg CORE_PIP_EXTRA_INDEX_URL=https://__token__:PkRC6rSxyC31oYfvpXb9@gitlab.actcognitive.org/api/v4/projects/22/packages/pypi/simple
       .
-    - docker push $IMAGE
-    - docker tag $IMAGE $LATEST_IMAGE
     - docker push $LATEST_IMAGE
+    - (if [ -v IMAGE ]; then docker tag $LATEST_IMAGE $IMAGE; docker push $IMAGE; fi)
+
+deploy:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"
+      when: on_success
+  needs:
+    - build
+  trigger: avatar/deployment_dev

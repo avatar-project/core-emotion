@@ -1,14 +1,15 @@
 FROM python:3.9 as build-image
-ARG PIP_EXTRA_INDEX_URL
+
+ARG PLATFORM_PIP_EXTRA_INDEX_URL
+ARG CORE_PIP_EXTRA_INDEX_URL
+
 WORKDIR /service
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 # COPY requirements requirements/
 COPY ./requirements.txt .
-COPY ./require_install.sh .
-RUN python -m pip install --upgrade pip
-RUN sh require_install.sh
-# RUN pip install --no-cache-dir --disable-pip-version-check --requirement requirements.txt
+RUN pip install --no-cache-dir --disable-pip-version-check --requirement requirements.txt --extra-index-url ${PLATFORM_PIP_EXTRA_INDEX_URL}
+
 
 
 FROM python:3.9 as runtime-image
@@ -22,5 +23,6 @@ ARG AVATAR_TITLE
 ENV AVATAR_VERSION $AVATAR_VERSION
 ENV AVATAR_TITLE $AVATAR_TITLE
 ENV PATH="/opt/venv/bin:$PATH"
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=
+
 ENTRYPOINT ["python", "-m", "app"]
